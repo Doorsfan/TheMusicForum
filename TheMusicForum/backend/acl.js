@@ -7,4 +7,4 @@ module.exports = function (tableName, req) {
   method = method === 'patch' ? 'put' : method;
   let allowed = aclRules?.[userRole]?.[tableName]?.[method];
   return !!allowed;
-}
+};

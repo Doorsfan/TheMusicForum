@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Grape+Nuts&family=Open+Sans&display=swap');
+
+body {
+  margin: 0;
+  background-image: url('/images/guitar.jpg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center;
+  font-family: 'Open Sans';
+}
+
+h3 {
+  font-family: 'Grape Nuts';
+  font-weight: normal;
+  font-size: 200%;
+  margin: 15px 0 0 0;
+}
+
+.topicTitle {
+  font-weight: normal;
+  font-size: 200%;
+  margin-top: 10px;
+}
+
+.submitButton {
+  margin-left: auto;
+  margin-right: auto;
+  width: max-content;
+  display: block;
+  margin-top: 10px;
+}
+
+.loginForm {
+  display: block;
+  background-color: white;
+  width: max-content;
+  padding: 10px;
+  padding-left: 30px;
+  padding-right: 30px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 38vh;
+  border: solid 1px black;
+}
+
+.homeLink {
+  text-decoration: none;
+  color: black;
+}
+
+.loginText,
+.homeText {
+  text-decoration: none;
+  font-size: 20px;
+}
+
+.loginLink {
+  text-decoration: none;
+  color: black;
+}
+
+.registerLink {
+  text-decoration: none;
+  color: black;
+  text-align: center;
+}
+
+.registerLinkDiv {
+  text-align: center;
+  margin-top: 5px;
+}
+
+.registerDiv {
+  text-align: center;
+}
+
+main {
+  max-width: 650px;
+  margin: 40px auto;
+  border-radius: 10px;
+  background-color: white;
+  padding: 20px;
+}
+
+.person {
+  cursor: pointer;
+  border-bottom: 1px solid #999;
+  padding-bottom: 5px;
+}
+
+.person:nth-child(odd) h3 {
+  color: rgb(52, 56, 191);
+}
+
+.createdDiv,
+.postedDiv {
+  width: max-content;
+}
+
+.header {
+  height: 50px;
+  background-color: white;
+  padding-top: 20px;
+  display: grid;
+  grid-template-columns: 10px auto max-content auto max-content 80px;
+}
+
+.ForumText {
+  font-size: 30px;
+}
+
+.thread {
+  display: grid;
+  grid-template-columns: max-content auto 200px 20px;
+  margin-top: -10px;
+}

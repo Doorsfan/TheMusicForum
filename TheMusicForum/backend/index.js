@@ -11,8 +11,7 @@ app.use(express.static(path.join(__dirname, '../dist')));
 
 app.use(express.json({ limit: '100MB' }));
 
-app.listen(port, () =>
-    console.log('Listening on http://localhost:' + port));
+app.listen(port, () => console.log('Listening on http://localhost:' + port));
 const login = require('./login.js');
 
 login(app, db);
@@ -23,5 +22,5 @@ setupRESTapi(app, db);
 // To make frontend work hard reloads serve index.html
 // if no other match
 app.all('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist', 'index.html'));
+  res.sendFile(path.join(__dirname, '../dist', 'index.html'));
 });

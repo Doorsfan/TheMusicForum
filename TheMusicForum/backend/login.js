@@ -4,24 +4,26 @@ const acl = require('./acl');
 const passwordEncryptor = require('./passwordEncryptor');
 
 module.exports = function (app, db) {
-  app.use(session({
-    secret: 'someUnusualStringThatIsUniqueForThisProject',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: 'auto' },
-    store: store({ dbPath: './database/musicforum.db' })
-  }));
+  app.use(
+    session({
+      secret: 'someUnusualStringThatIsUniqueForThisProject',
+      resave: false,
+      saveUninitialized: true,
+      cookie: { secure: 'auto' },
+      store: store({ dbPath: './database/musicforum.db' }),
+    })
+  );
 
   app.post('/api/login', (req, res) => {
     if (!acl('login', req)) {
       res.status(405);
       res.json({ _error: 'Not allowed' });
     }
-    req.body.password =
-      passwordEncryptor(req.body.password);
+    req.body.password = passwordEncryptor(req.body.password);
+
     let stmt = db.prepare(`
-      SELECT * FROM customers
-      WHERE email = :email AND password = :password
+      SELECT * FROM users
+      WHERE username = :username AND password = :password
     `);
     let result = stmt.all(req.body)[0] || { _error: 'No such user.' };
     delete result.password;
@@ -47,5 +49,4 @@ module.exports = function (app, db) {
     delete req.session.user;
     res.json({ success: 'logged out' });
   });
-
-}
+};

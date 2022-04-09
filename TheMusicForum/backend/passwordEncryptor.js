@@ -5,9 +5,11 @@ const crypto = require('crypto');
 const salt = require('./koksladan.json');
 
 module.exports = function (password) {
-  if (typeof password !== 'string') { return null; } // secure?
+  if (typeof password !== 'string') {
+    return null;
+  } // secure?
   return crypto
     .createHmac('sha256', salt) // choose algorithm and salt
-    .update(password)  // send the string to encrypt
+    .update(password) // send the string to encrypt
     .digest('hex'); // decide on output format (in our case hexadecimal)
-}
+};
