@@ -43,11 +43,20 @@ export default function StartPage() {
         <div className='SpaceBlock' />
         <div className='ForumText'>The Music Forum</div>
         <div className='SpaceBlock' />
-        <div className='loginText'>
-          <Link className='loginLink' to='/Login'>
-            Login
-          </Link>
-        </div>
+        {sessionStorage.getItem('currentUser') == undefined && (
+          <div className='loginText'>
+            <Link className='loginLink' to='/Login'>
+              Login
+            </Link>
+          </div>
+        )}
+        {sessionStorage.getItem('currentUser') != undefined && (
+          <div className='profileText'>
+            <Link className='profileLink' to='/Profile'>
+              My Profile
+            </Link>
+          </div>
+        )}
       </div>
       <main>
         {threads.map(({ id, groupId, title, created, locked, postedBy }) => (

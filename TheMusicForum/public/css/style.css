@@ -44,6 +44,19 @@ h3 {
   border: solid 1px black;
 }
 
+.registerForm{
+  display: block;
+  background-color: white;
+  width: max-content;
+  padding: 10px;
+  padding-left: 30px;
+  padding-right: 30px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 25vh;
+  border: solid 1px black;
+}
+
 .homeLink {
   text-decoration: none;
   color: black;
@@ -106,6 +119,16 @@ main {
   grid-template-columns: 10px auto max-content auto max-content 80px;
 }
 
+.profileText{
+  width: max-content;
+  position: relative;
+  left: -20px;
+}
+.profileLink{
+  text-decoration: none;
+  color: black;
+  width: 80px;
+}
 .ForumText {
   font-size: 30px;
 }

@@ -103,6 +103,10 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         req.body.password = passwordEncryptor(req.body.password);
       }
 
+      if (req.body.password) {
+        req.body.password = passwordEncryptor(req.body.password);
+      }
+
       runQuery(
         name,
         req,

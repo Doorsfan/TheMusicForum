@@ -1,17 +1,11 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
-
-async function loginUser(credentials) {
-  return fetch('/api/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(credentials),
-  }).then(async (data) => {
-    console.log(await data.json());
-  });
-}
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Link,
+  useNavigate,
+} from 'react-router-dom';
 
 export default function LoginPage() {
   const [username, setUserName] = useState();
@@ -24,6 +18,20 @@ export default function LoginPage() {
       password,
     });
   };
+
+  async function loginUser(credentials) {
+    return fetch('/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+    }).then(async (data) => {
+      let myUser = await data.json();
+      sessionStorage.setItem('currentUser', JSON.stringify(myUser));
+      window.location.pathname = '/';
+    });
+  }
 
   return (
     <div>
