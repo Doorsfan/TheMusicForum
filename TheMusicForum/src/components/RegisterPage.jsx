@@ -24,18 +24,17 @@ export default function LoginPage() {
       password.length >= 8
     ) {
       if (password.replace(/\D/g, '').length >= 3) {
-        if (password.replace(/[a-zA-Z0-9 ]/g, "").length >= 3){
+        if (password.replace(/[a-zA-Z0-9 ]/g, '').length >= 3) {
           const token = await registerUser({
             role,
             blocked,
             username,
             password,
             profileimage,
-            lastChangedPassword
+            lastChangedPassword,
           });
-        }
-        else {
-          alert("Password must contain at least 3 special characters.")
+        } else {
+          alert('Password must contain at least 3 special characters.');
         }
       } else {
         alert('Password must contain at least 3 numeric characters.');

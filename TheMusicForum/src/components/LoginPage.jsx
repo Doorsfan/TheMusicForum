@@ -28,8 +28,14 @@ export default function LoginPage() {
       body: JSON.stringify(credentials),
     }).then(async (data) => {
       let myUser = await data.json();
-      sessionStorage.setItem('currentUser', JSON.stringify(myUser));
-      window.location.pathname = '/';
+      if (myUser.needToUpdate) {
+        delete myUser.needToUpdate;
+        sessionStorage.setItem('currentUser', JSON.stringify(myUser));
+        window.location.pathname = `/updateUserInfo/${myUser.id}`;
+      } else {
+        sessionStorage.setItem('currentUser', JSON.stringify(myUser));
+        window.location.pathname = '/';
+      }
     });
   }
 

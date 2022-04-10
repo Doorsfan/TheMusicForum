@@ -62,10 +62,12 @@ module.exports = function (app, db) {
     }
 
     if (toBuild - lastChangedToBuild >= 22) {
-      alert('You last changed your password more than 21 days ago. You must update it.');
+      result.needToUpdate =
+        'You last changed your password more than 21 days ago. You must update it.';
     }
 
     delete result.password;
+    delete result.lastChangedPassword;
     if (!result._error) {
       req.session.user = result;
     }
