@@ -76,6 +76,20 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       );
     });
 
+    app.get('/api/whoAmI', (req, res) => {
+      runQuery(
+        name,
+        req,
+        res,
+        req.params,
+        `
+        SELECT *
+        FROM sessions
+      `,
+        true
+      );
+    });
+
     app.get('/api/' + name + '/:id', (req, res) => {
       runQuery(
         name,

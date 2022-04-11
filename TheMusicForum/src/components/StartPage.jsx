@@ -29,7 +29,15 @@ export default function StartPage() {
 
       // Fetch all persons from backend
       setThreads(await Thread.find());
-
+      console.log(document.cookie);
+      fetch('/api/whoAmI', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then(async (data) => {
+        console.log(await data.json());
+      });
       // We can delete Mickey Mouse that was just created
       /* await mickey.delete(); */
     })();
@@ -43,20 +51,16 @@ export default function StartPage() {
         <div className='SpaceBlock' />
         <div className='ForumText'>The Music Forum</div>
         <div className='SpaceBlock' />
-        {sessionStorage.getItem('currentUser') == undefined && (
-          <div className='loginText'>
-            <Link className='loginLink' to='/Login'>
-              Login
-            </Link>
-          </div>
-        )}
-        {sessionStorage.getItem('currentUser') != undefined && (
-          <div className='profileText'>
-            <Link className='profileLink' to='/Profile'>
-              My Profile
-            </Link>
-          </div>
-        )}
+        <div className='loginText'>
+          <Link className='loginLink' to='/Login'>
+            Login
+          </Link>
+        </div>
+        <div className='profileText'>
+          <Link className='profileLink' to='/Profile'>
+            My Profile
+          </Link>
+        </div>
       </div>
       <main>
         {threads.map(({ id, groupId, title, created, locked, postedBy }) => (
