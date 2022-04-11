@@ -30,6 +30,8 @@ export default function LoginPage() {
       let myUser = await data.json();
       if (myUser.needToUpdate) {
         delete myUser.needToUpdate;
+        //GETs to DB instead of Session Storage
+        // UseEffect to check if a User is logged in
         sessionStorage.setItem('currentUser', JSON.stringify(myUser));
         window.location.pathname = `/updateUserInfo/${myUser.id}`;
       } else {
