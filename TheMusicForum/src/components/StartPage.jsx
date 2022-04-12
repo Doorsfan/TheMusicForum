@@ -12,10 +12,37 @@ const { Book, Author } = factory;
 
 export default function StartPage() {
   const [threads, setThreads] = useState([]);
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  function logout() {
+    fetch(`api/login`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }).then(async (data) => {
+      let loggedout = await data.json();
+      setLoggedIn(false);
+    })
+  }
 
   // Run this when our component mounts (we can see it on screen)
   useEffect(() => {
     (async () => {
+      console.log(document.cookie);
+      if (document.cookie == "undefined" || document.cookie.length == 0) {
+        return;
+      }
+
+      fetch(`/api/whoAmI/${document.cookie}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then(async (data) => {
+        await data.json();
+        setLoggedIn(true);
+      });
       // the lazily instantiated classes works too
 
       // create a new author
@@ -43,11 +70,27 @@ export default function StartPage() {
         <div className='SpaceBlock' />
         <div className='ForumText'>The Music Forum</div>
         <div className='SpaceBlock' />
-        <div className='loginText'>
-          <Link className='loginLink' to='/Login'>
-            Login
-          </Link>
-        </div>
+        {!loggedIn && (
+          <div className='loginText'>
+            <Link className='loginLink' to='/Login'>
+              Login
+            </Link>
+          </div>
+        )}
+        {
+          loggedIn && (
+            <div onClick={logout} className="logOutText">
+              Logout
+            </div>
+          )
+        }
+        {loggedIn && (
+          <div className='profileText'>
+            <Link className='profileLink' to={`/Profile/${document.cookie}`}>
+              My Profile
+            </Link>
+          </div>
+        )}
       </div>
       <main>
         {threads.map(({ id, groupId, title, created, locked, postedBy }) => (

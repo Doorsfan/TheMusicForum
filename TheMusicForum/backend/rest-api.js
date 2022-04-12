@@ -76,6 +76,49 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       );
     });
 
+    app.get('/api/getSession', (req, res) => {
+      runQuery(
+        name,
+        req,
+        res,
+        req.params,
+        `
+        SELECT * FROM sessions
+        `,
+        true
+      );
+    });
+
+    app.get('/api/whoAmI/:username', (req, res) => {
+      runQuery(
+        name,
+        req,
+        res,
+        req.params,
+        `
+        SELECT role
+        FROM users
+        WHERE username = :username
+      `,
+        true
+      );
+    });
+
+    app.get('/api/getUserInfo/:username', (req, res) => {
+      runQuery(
+        name,
+        req,
+        res,
+        req.params,
+        `
+        SELECT blocked, profileImage, username
+        FROM users
+        WHERE username = :username
+        `,
+        true
+      );
+    });
+
     app.get('/api/' + name + '/:id', (req, res) => {
       runQuery(
         name,
@@ -100,6 +143,10 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
       if (name === userTable) {
         req.body.userRole = 'user';
+        req.body.password = passwordEncryptor(req.body.password);
+      }
+
+      if (req.body.password) {
         req.body.password = passwordEncryptor(req.body.password);
       }
 
