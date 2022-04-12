@@ -13,6 +13,8 @@ function runQuery(
   sqlForPreparedStatement,
   onlyOne = false
 ) {
+  console.log(tableName, sqlForPreparedStatement, req.body);
+
   if (!acl(tableName, req)) {
     res.status(405);
     res.json({ _error: 'Not allowed!' });
@@ -71,11 +73,15 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         {},
         `
         SELECT *
-        FROM ${name}
+        FROM '${name}'
       `
       );
     });
 
+    // DO NOT PUT SPECIAL ROUTES INSIDE THE  LOOP THROUGH TABLES
+    // THEY WILL DEFINED MULTIPLE TIMES - NOT GOOD!
+
+    // Already exists as GET /api/login...
     app.get('/api/getSession', (req, res) => {
       runQuery(
         name,
@@ -127,7 +133,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         req.params,
         `
         SELECT *
-        FROM ${name}
+        FROM '${name}'
         WHERE id = :id
       `,
         true
@@ -156,7 +162,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         res,
         req.body,
         `
-        INSERT INTO ${name} (${Object.keys(req.body)})
+        INSERT INTO '${name}' (${Object.keys(req.body)})
         VALUES (${Object.keys(req.body).map((x) => ':' + x)})
       `
       );
@@ -173,7 +179,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         res,
         { ...req.body, ...req.params },
         `
-        UPDATE ${name}
+        UPDATE '${name}'
         SET ${Object.keys(req.body).map((x) => x + ' = :' + x)}
         WHERE id = :id
       `
@@ -190,7 +196,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         res,
         req.params,
         `
-        DELETE FROM ${name}
+        DELETE FROM '${name}'
         WHERE id = :id
       `
       );
