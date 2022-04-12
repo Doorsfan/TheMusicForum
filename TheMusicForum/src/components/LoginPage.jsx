@@ -28,14 +28,18 @@ export default function LoginPage() {
       body: JSON.stringify(credentials),
     }).then(async (data) => {
       let myUser = await data.json();
-      if (myUser.needToUpdate) {
+      if (myUser._error) {
+        alert("Incorrect credentials.");
+      }
+      else if (myUser.needToUpdate) {
         delete myUser.needToUpdate;
+        document.cookie = myUser.username;
         //GETs to DB instead of Session Storage
         // UseEffect to check if a User is logged in
-        sessionStorage.setItem('currentUser', JSON.stringify(myUser));
         window.location.pathname = `/updateUserInfo/${myUser.id}`;
-      } else {
-        sessionStorage.setItem('currentUser', JSON.stringify(myUser));
+      }
+      else {
+        document.cookie = myUser.username;
         window.location.pathname = '/';
       }
     });

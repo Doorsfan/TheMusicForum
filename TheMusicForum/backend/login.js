@@ -9,7 +9,10 @@ module.exports = function (app, db) {
       secret: 'someUnusualStringThatIsUniqueForThisProject',
       resave: false,
       saveUninitialized: true,
-      cookie: { secure: 'auto' },
+      cookie: {
+        secure: 'auto',
+        maxAge: 10 * 60 * 60 * 24 * 1000
+      },
       store: store({ dbPath: './database/musicforum.db' }),
     })
   );

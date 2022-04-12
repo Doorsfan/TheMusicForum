@@ -18,45 +18,58 @@ export default function LoginPage() {
     const role = 'user';
     const blocked = 0;
     const lastChangedPassword = Date.now();
-    if (
-      password === repeatPassword &&
-      username.length >= 8 &&
-      password.length >= 8
-    ) {
-      if (password.replace(/\D/g, '').length >= 3) {
-        if (password.replace(/[a-zA-Z0-9 ]/g, '').length >= 3) {
-          const token = await registerUser({
-            role,
-            blocked,
-            username,
-            password,
-            profileimage,
-            lastChangedPassword,
-          });
+    if (username && password && repeatPassword) {
+      if (
+        password === repeatPassword &&
+        username.length >= 8 &&
+        password.length >= 8
+      ) {
+        if (password.replace(/\D/g, '').length >= 3) {
+          if (password.replace(/[a-zA-Z0-9 ]/g, '').length >= 3) {
+            const token = await registerUser({
+              role,
+              blocked,
+              username,
+              password,
+              profileimage,
+              lastChangedPassword,
+            });
+            return true;
+          } else {
+            alert('Password must contain at least 3 special characters.');
+            return false;
+          }
         } else {
-          alert('Password must contain at least 3 special characters.');
+          alert('Password must contain at least 3 numeric characters.');
+          return false;
         }
       } else {
-        alert('Password must contain at least 3 numeric characters.');
+        alert(
+          'Username must be at least 8 characters long. \nPassword must be at least 8 characters long. \nPassword must match repeated password.'
+        );
+        return false;
       }
-    } else {
-      alert(
-        'Username must be at least 8 characters long. \nPassword must be at least 8 characters long. \nPassword must match repeated password.'
-      );
+    }
+    else {
+      alert("You must fill out credentials to register.");
     }
   };
 
   async function registerUser(credentials) {
-    return fetch('/api/users', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
-    }).then(async (data) => {
-      let myUser = await data.json();
-      window.location.pathname = '/';
-    });
+    if (handleSubmit()) {
+      return fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      }).then(async (data) => {
+        let myUser = await data.json();
+        window.location.pathname = '/';
+      });
+    } else {
+      alert('Please fill out your credentials first');
+    }
   }
 
   return (

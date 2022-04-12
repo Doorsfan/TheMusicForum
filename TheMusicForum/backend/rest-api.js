@@ -76,16 +76,45 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       );
     });
 
-    app.get('/api/whoAmI', (req, res) => {
+    app.get('/api/getSession', (req, res) => {
       runQuery(
         name,
         req,
         res,
         req.params,
         `
-        SELECT *
-        FROM sessions
+        SELECT * FROM sessions
+        `,
+        true
+      );
+    });
+
+    app.get('/api/whoAmI/:username', (req, res) => {
+      runQuery(
+        name,
+        req,
+        res,
+        req.params,
+        `
+        SELECT role
+        FROM users
+        WHERE username = :username
       `,
+        true
+      );
+    });
+
+    app.get('/api/getUserInfo/:username', (req, res) => {
+      runQuery(
+        name,
+        req,
+        res,
+        req.params,
+        `
+        SELECT blocked, profileImage, username
+        FROM users
+        WHERE username = :username
+        `,
         true
       );
     });
