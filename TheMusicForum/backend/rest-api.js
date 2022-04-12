@@ -78,53 +78,6 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       );
     });
 
-    // DO NOT PUT SPECIAL ROUTES INSIDE THE  LOOP THROUGH TABLES
-    // THEY WILL DEFINED MULTIPLE TIMES - NOT GOOD!
-
-    // Already exists as GET /api/login...
-    app.get('/api/getSession', (req, res) => {
-      runQuery(
-        name,
-        req,
-        res,
-        req.params,
-        `
-        SELECT * FROM sessions
-        `,
-        true
-      );
-    });
-
-    app.get('/api/whoAmI/:username', (req, res) => {
-      runQuery(
-        name,
-        req,
-        res,
-        req.params,
-        `
-        SELECT role
-        FROM users
-        WHERE username = :username
-      `,
-        true
-      );
-    });
-
-    app.get('/api/getUserInfo/:username', (req, res) => {
-      runQuery(
-        name,
-        req,
-        res,
-        req.params,
-        `
-        SELECT blocked, profileImage, username
-        FROM users
-        WHERE username = :username
-        `,
-        true
-      );
-    });
-
     app.get('/api/' + name + '/:id', (req, res) => {
       runQuery(
         name,
@@ -202,6 +155,47 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       );
     });
   }
+
+  app.get('/api/getUserInfo/:username', (req, res) => {
+    runQuery(
+      name,
+      req,
+      res,
+      req.params,
+      `
+        SELECT blocked, profileImage, username
+        FROM users
+        WHERE username = :username
+        `,
+      true
+    );
+  });
+
+  app.get('/api/whoAmI/:username', (req, res) => {
+    runQuery(
+      req,
+      res,
+      req.params,
+      `
+        SELECT role
+        FROM users
+        WHERE username = :username
+      `,
+      true
+    );
+  });
+
+  app.get('/api/getSession', (req, res) => {
+    runQuery(
+      req,
+      res,
+      req.params,
+      `
+        SELECT * FROM sessions
+        `,
+      true
+    );
+  });
 
   specialRestRoutes(app, runQuery, db);
 
