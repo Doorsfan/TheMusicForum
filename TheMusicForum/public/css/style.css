@@ -135,6 +135,12 @@ main {
   margin-top: 10px;
 }
 
+.GroupsTitle{
+  font-size: 30px;
+  font-weight: bolder;
+  text-align: center;
+}
+
 .logOutText{
   position: relative;
   left: -30px;

@@ -11,9 +11,8 @@ import { factory } from '../utilities/FetchHelper';
 
 const { Book, Author } = factory;
 
-export default function StartPage() {
+export default function GroupPage() {
   const [threads, setThreads] = useState([]);
-  const [userGroups, setUserGroups] = useState([]);
   const [loggedIn, setLoggedIn] = useState(false);
 
   function logout() {
@@ -35,7 +34,6 @@ export default function StartPage() {
         setLoggedIn(true);
       }
       setThreads(await Thread.find());
-      setUserGroups(await UserGroup.find());
     })();
   }, []);
 
@@ -69,12 +67,6 @@ export default function StartPage() {
       </div>
       <main>
         <div className='GroupsTitle'>Groups</div>
-        {userGroups.map(({ id, name, description }) => (
-          <div className='group' key={id} onClick={() => alert(name)}>
-            <h3 className='groupName'>{name}</h3>
-            <div className='descriptionDiv'>{description}</div>
-          </div>
-        ))}
         {threads.map(({ id, groupId, title, created, locked, postedBy }) => (
           <div className='thread' key={id} onClick={() => alert(title)}>
             <h3 className='topicTitle'>{title}</h3>
