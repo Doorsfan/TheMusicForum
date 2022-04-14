@@ -49,9 +49,8 @@ export default function LoginPage() {
         );
         return false;
       }
-    }
-    else {
-      alert("You must fill out credentials to register.");
+    } else {
+      alert('You must fill out credentials to register.');
     }
   };
 

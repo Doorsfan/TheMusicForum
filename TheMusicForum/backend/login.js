@@ -11,11 +11,19 @@ module.exports = function (app, db) {
       saveUninitialized: true,
       cookie: {
         secure: 'auto',
-        maxAge: 10 * 60 * 60 * 24 * 1000
+        maxAge: 10 * 60 * 60 * 24 * 1000,
       },
       store: store({ dbPath: './database/musicforum.db' }),
     })
   );
+
+  app.delete('/api/logout', (req, res) => {
+    req.session = null;
+    res.clearCookie('loggedInUsername');
+    req.session.destroy((err) => {
+      res.json('Logged out.');
+    });
+  });
 
   app.post('/api/login', (req, res) => {
     if (!acl('login', req)) {
@@ -73,24 +81,8 @@ module.exports = function (app, db) {
     delete result.lastChangedPassword;
     if (!result._error) {
       req.session.user = result;
+      res.cookie('loggedInUsername', result.username);
     }
     res.json(result);
-  });
-
-  app.get('/api/login', (req, res) => {
-    if (!acl('login', req)) {
-      res.status(405);
-      res.json({ _error: 'Not allowed' });
-    }
-    res.json(req.session.user || { _error: 'Not logged in' });
-  });
-
-  app.delete('/api/login', (req, res) => {
-    if (!acl('login', req)) {
-      res.status(405);
-      res.json({ _error: 'Not allowed' });
-    }
-    delete req.session.user;
-    res.json({ success: 'logged out' });
   });
 };

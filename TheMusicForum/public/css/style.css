@@ -119,6 +119,22 @@ main {
   grid-template-columns: 10px auto max-content auto max-content max-content 80px;
 }
 
+.createNewGroupLink{
+  color: black;
+  text-decoration: none;
+}
+
+.createNewGroupDiv{
+  display: block;
+  text-decoration: none;
+  color: black;
+  margin-left: auto;
+  margin-right: auto;
+  width: max-content;
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
 .logOutText{
   position: relative;
   left: -30px;

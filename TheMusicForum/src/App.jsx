@@ -12,6 +12,7 @@ import StartPage from './components/StartPage';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import ProfilePage from './components/ProfilePage';
+import CreateNewGroupPage from './components/createNewGroupPage';
 
 const { Book, Author } = factory;
 
@@ -23,7 +24,12 @@ export default function App() {
           <Route exact path='/' element={<StartPage />} />
           <Route exact path='/Login' element={<LoginPage />} />
           <Route exact path='/Register' element={<RegisterPage />} />
-          <Route exact path="/Profile/:profileName" element={<ProfilePage />} />
+          <Route exact path='/Profile/:profileName' element={<ProfilePage />} />
+          <Route
+            exact
+            path='/createNewGroup'
+            element={<CreateNewGroupPage />}
+          />
         </Routes>
       </Router>
     </>

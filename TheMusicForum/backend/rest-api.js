@@ -5,6 +5,39 @@ const userTable = 'customers';
 
 let db;
 
+function runMyQuery(
+  req,
+  res,
+  parameters,
+  sqlForPreparedStatement,
+  onlyOne,
+  withResponse = true
+) {
+  let result;
+
+  try {
+    let stmt = db.prepare(sqlForPreparedStatement);
+    let method =
+      sqlForPreparedStatement.trim().toLowerCase().indexOf('select') === 0
+        ? 'all'
+        : 'run';
+    result = stmt[method](parameters);
+  } catch (error) {
+    result = { _error: error + '' };
+  }
+  if (onlyOne) {
+    result = result[0];
+  }
+  result = result || null;
+
+  if (withResponse) {
+    res.status(result ? (result._error ? 500 : 200) : 404);
+    setTimeout(() => res.json(result), 1);
+  } else {
+    return result;
+  }
+}
+
 function runQuery(
   tableName,
   req,
@@ -13,11 +46,12 @@ function runQuery(
   sqlForPreparedStatement,
   onlyOne = false
 ) {
+  /*
   if (!acl(tableName, req)) {
     res.status(405);
     res.json({ _error: 'Not allowed!' });
     return;
-  }
+  } */
 
   let result;
   try {
@@ -71,51 +105,8 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         {},
         `
         SELECT *
-        FROM ${name}
+        FROM '${name}'
       `
-      );
-    });
-
-    app.get('/api/getSession', (req, res) => {
-      runQuery(
-        name,
-        req,
-        res,
-        req.params,
-        `
-        SELECT * FROM sessions
-        `,
-        true
-      );
-    });
-
-    app.get('/api/whoAmI/:username', (req, res) => {
-      runQuery(
-        name,
-        req,
-        res,
-        req.params,
-        `
-        SELECT role
-        FROM users
-        WHERE username = :username
-      `,
-        true
-      );
-    });
-
-    app.get('/api/getUserInfo/:username', (req, res) => {
-      runQuery(
-        name,
-        req,
-        res,
-        req.params,
-        `
-        SELECT blocked, profileImage, username
-        FROM users
-        WHERE username = :username
-        `,
-        true
       );
     });
 
@@ -127,7 +118,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         req.params,
         `
         SELECT *
-        FROM ${name}
+        FROM '${name}'
         WHERE id = :id
       `,
         true
@@ -156,7 +147,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         res,
         req.body,
         `
-        INSERT INTO ${name} (${Object.keys(req.body)})
+        INSERT INTO '${name}' (${Object.keys(req.body)})
         VALUES (${Object.keys(req.body).map((x) => ':' + x)})
       `
       );
@@ -173,7 +164,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         res,
         { ...req.body, ...req.params },
         `
-        UPDATE ${name}
+        UPDATE '${name}'
         SET ${Object.keys(req.body).map((x) => x + ' = :' + x)}
         WHERE id = :id
       `
@@ -190,12 +181,82 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         res,
         req.params,
         `
-        DELETE FROM ${name}
+        DELETE FROM '${name}'
         WHERE id = :id
       `
       );
     });
   }
+
+  app.post('/api/createNewGroup', (req, res) => {
+    try {
+      let myStatement = db.prepare(
+        `INSERT INTO userGroup (id, description, name) VALUES (NULL,'${req.body.description}' , '${req.body.name}')`
+      );
+      let result = myStatement.run();
+
+      let myGroup = db.prepare(
+        `SELECT * FROM userGroup WHERE name = '${req.body.name}'`
+      );
+      let myGroupResult = myGroup.run();
+
+      let groupOwner = db.prepare(
+        `SELECT * FROM users WHERE username = '${req.body.groupOwner}'`
+      );
+      let groupOwnerResult = groupOwner.all();
+
+      let createMyGroupMember = db.prepare(
+        `INSERT INTO groupMember (userId, belongsToGroup, moderatorLevel) VALUES ('${groupOwnerResult[0]['id']}', '${myGroupResult['lastInsertRowid']}', 'owner')`
+      );
+      let createGroupMemberResult = createMyGroupMember.run();
+
+      res.json(
+        'Successfully made a new group with the name of: ' + req.body.name
+      );
+    } catch (e) {
+      res.json('Failed to create the group.');
+    }
+  });
+
+  app.get('/api/getUserInfo/:username', (req, res) => {
+    runMyQuery(
+      req,
+      res,
+      req.params,
+      `
+        SELECT blocked, profileImage, username
+        FROM users
+        WHERE username = :username
+        `,
+      true
+    );
+  });
+
+  app.get('/api/whoAmI/:username', (req, res) => {
+    runMyQuery(
+      req,
+      res,
+      req.params,
+      `
+        SELECT role
+        FROM users
+        WHERE username = :username
+      `,
+      true
+    );
+  });
+
+  app.get('/api/getSession', (req, res) => {
+    runMyQuery(
+      req,
+      res,
+      req.params,
+      `
+        SELECT * FROM sessions
+        `,
+      true
+    );
+  });
 
   specialRestRoutes(app, runQuery, db);
 
