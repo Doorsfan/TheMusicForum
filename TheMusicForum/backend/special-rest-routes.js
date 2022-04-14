@@ -1,21 +1,6 @@
 const passwordEncryptor = require('./passwordEncryptor');
 
 module.exports = function (app, runQuery, db) {
-  /*
-  app.get('/api/my-orders', (req, res) => {
-    let userId = req.session.user?.id;
-
-    runQuery(
-      'my-orders',
-      req,
-      res,
-      { customerId: userId },
-      `
-      SELECT * FROM orderDetails WHERE customerId = :customerId
-    `
-    );
-  });*/
-
   function editMyUserInfo(req, res) {
     let userId = req.session.user?.id;
 

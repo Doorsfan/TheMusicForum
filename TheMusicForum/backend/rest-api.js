@@ -5,6 +5,39 @@ const userTable = 'customers';
 
 let db;
 
+function runMyQuery(
+  req,
+  res,
+  parameters,
+  sqlForPreparedStatement,
+  onlyOne,
+  withResponse = true
+) {
+  let result;
+
+  try {
+    let stmt = db.prepare(sqlForPreparedStatement);
+    let method =
+      sqlForPreparedStatement.trim().toLowerCase().indexOf('select') === 0
+        ? 'all'
+        : 'run';
+    result = stmt[method](parameters);
+  } catch (error) {
+    result = { _error: error + '' };
+  }
+  if (onlyOne) {
+    result = result[0];
+  }
+  result = result || null;
+
+  if (withResponse) {
+    res.status(result ? (result._error ? 500 : 200) : 404);
+    setTimeout(() => res.json(result), 1);
+  } else {
+    return result;
+  }
+}
+
 function runQuery(
   tableName,
   req,
@@ -13,13 +46,12 @@ function runQuery(
   sqlForPreparedStatement,
   onlyOne = false
 ) {
-  console.log(tableName, sqlForPreparedStatement, req.body);
-
+  /*
   if (!acl(tableName, req)) {
     res.status(405);
     res.json({ _error: 'Not allowed!' });
     return;
-  }
+  } */
 
   let result;
   try {
@@ -156,9 +188,38 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     });
   }
 
+  app.post('/api/createNewGroup', (req, res) => {
+    try {
+      let myStatement = db.prepare(
+        `INSERT INTO userGroup (id, description, name) VALUES (NULL,'${req.body.description}' , '${req.body.name}')`
+      );
+      let result = myStatement.run();
+
+      let myGroup = db.prepare(
+        `SELECT * FROM userGroup WHERE name = '${req.body.name}'`
+      );
+      let myGroupResult = myGroup.run();
+
+      let groupOwner = db.prepare(
+        `SELECT * FROM users WHERE username = '${req.body.groupOwner}'`
+      );
+      let groupOwnerResult = groupOwner.all();
+
+      let createMyGroupMember = db.prepare(
+        `INSERT INTO groupMember (userId, belongsToGroup, moderatorLevel) VALUES ('${groupOwnerResult[0]['id']}', '${myGroupResult['lastInsertRowid']}', 'owner')`
+      );
+      let createGroupMemberResult = createMyGroupMember.run();
+
+      res.json(
+        'Successfully made a new group with the name of: ' + req.body.name
+      );
+    } catch (e) {
+      res.json('Failed to create the group.');
+    }
+  });
+
   app.get('/api/getUserInfo/:username', (req, res) => {
-    runQuery(
-      name,
+    runMyQuery(
       req,
       res,
       req.params,
@@ -172,7 +233,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
   });
 
   app.get('/api/whoAmI/:username', (req, res) => {
-    runQuery(
+    runMyQuery(
       req,
       res,
       req.params,
@@ -186,7 +247,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
   });
 
   app.get('/api/getSession', (req, res) => {
-    runQuery(
+    runMyQuery(
       req,
       res,
       req.params,

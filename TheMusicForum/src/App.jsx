@@ -24,8 +24,12 @@ export default function App() {
           <Route exact path='/' element={<StartPage />} />
           <Route exact path='/Login' element={<LoginPage />} />
           <Route exact path='/Register' element={<RegisterPage />} />
-          <Route exact path="/Profile/:profileName" element={<ProfilePage />} />
-          <Route exact path="/createNewGroup" element={<CreateNewGroupPage />} />
+          <Route exact path='/Profile/:profileName' element={<ProfilePage />} />
+          <Route
+            exact
+            path='/createNewGroup'
+            element={<CreateNewGroupPage />}
+          />
         </Routes>
       </Router>
     </>

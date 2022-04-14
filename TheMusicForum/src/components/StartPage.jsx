@@ -15,7 +15,7 @@ export default function StartPage() {
   const [loggedIn, setLoggedIn] = useState(false);
 
   function logout() {
-    fetch(`api/login`, {
+    fetch(`api/logout`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -23,42 +23,16 @@ export default function StartPage() {
     }).then(async (data) => {
       let loggedout = await data.json();
       setLoggedIn(false);
-    })
+    });
   }
 
   // Run this when our component mounts (we can see it on screen)
   useEffect(() => {
     (async () => {
-      console.log(document.cookie);
-      if (document.cookie == "undefined" || document.cookie.length == 0) {
-        return;
-      }
-
-      fetch(`/api/whoAmI/${document.cookie}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }).then(async (data) => {
-        await data.json();
+      if (document.cookie) {
         setLoggedIn(true);
-      });
-      // the lazily instantiated classes works too
-
-      // create a new author
-      /* let mickey = new Thread({
-        title: 'hello',
-        created: Date.now(),
-        locked: 0,
-        postedBy: 'guy',
-      });
-      await mickey.save(); */
-
-      // Fetch all persons from backend
+      }
       setThreads(await Thread.find());
-
-      // We can delete Mickey Mouse that was just created
-      /* await mickey.delete(); */
     })();
   }, []);
 
@@ -77,13 +51,11 @@ export default function StartPage() {
             </Link>
           </div>
         )}
-        {
-          loggedIn && (
-            <div onClick={logout} className="logOutText">
-              Logout
-            </div>
-          )
-        }
+        {loggedIn && (
+          <div onClick={logout} className='logOutText'>
+            Logout
+          </div>
+        )}
         {loggedIn && (
           <div className='profileText'>
             <Link className='profileLink' to={`/Profile/${document.cookie}`}>

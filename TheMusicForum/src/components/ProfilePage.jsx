@@ -16,7 +16,6 @@ export default function ProfilePage() {
 
   useEffect(() => {
     (async () => {
-      
       fetch('/api/getSession', {
         method: 'GET',
         headers: {
@@ -24,10 +23,9 @@ export default function ProfilePage() {
         },
       }).then(async (data) => {
         let response = await data.json();
-        console.log(response);
+
         if (response?.session) {
-          console.log(document.cookie);
-          fetch(`/api/whoAmI/${document.cookie}`, {
+          fetch(`/api/whoAmI/${document.cookie.split('=')[1]}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -36,20 +34,20 @@ export default function ProfilePage() {
             let myUserRole = await data.json();
             setUserRole(myUserRole.role);
           });
-          fetch(`/api/getUserInfo/${document.cookie}`, {
+          fetch(`/api/getUserInfo/${document.cookie.split('=')[1]}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
             },
           }).then(async (data) => {
             let relevantInfo = await data.json();
-            setUserName(relevantInfo.username)
+            setUserName(relevantInfo.username);
             setUserGroups('bla');
           });
         }
-        else {
+        /*else {
           window.location = '/';
-        }
+        }*/
       });
     })();
   }, []);
@@ -67,8 +65,8 @@ export default function ProfilePage() {
           </Link>
         </div>
       </div>
-      <div className="createNewGroupDiv">
-        <Link className="createNewGroupLink" to='/createNewGroup'>
+      <div className='createNewGroupDiv'>
+        <Link className='createNewGroupLink' to='/createNewGroup'>
           Create New Group
         </Link>
       </div>

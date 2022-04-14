@@ -11,23 +11,31 @@ import FetchHelper from '../utilities/FetchHelper';
 import Group from '../utilities/Group';
 
 export default function CreateNewGroupPage() {
-  async function createNewGroup() {
-    let newGroup = {
-      description: 'bla',
-      name: 'bla',
-    };
-    console.log(newGroup);
+  const [description, setDescription] = useState();
+  const [name, setName] = useState();
 
-    fetch('/api/group', {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    let newGroup = {
+      description: description,
+      name: name,
+      groupOwner: document.cookie.split('=')[1],
+    };
+
+    fetch('/api/createNewGroup', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(newGroup),
     }).then(async (data) => {
-      console.log(await data.json());
+      let myGroupResult = await data.json();
+      if (myGroupResult != 'Failed to create the group.') {
+        window.location = '/';
+      }
     });
-  }
+  };
 
   return (
     <div>
@@ -43,7 +51,19 @@ export default function CreateNewGroupPage() {
           </Link>
         </div>
       </div>
-      <button onClick={createNewGroup}>Create New Group</button>
+      <form onSubmit={handleSubmit} className='registerForm'>
+        <label>
+          <p>Group Name</p>
+          <input type='text' onChange={(e) => setName(e.target.value)} />
+        </label>
+        <label>
+          <p>Group Description</p>
+          <input type='text' onChange={(e) => setDescription(e.target.value)} />
+        </label>
+        <button className='submitButton' type='submit'>
+          Create New Group
+        </button>
+      </form>
     </div>
   );
 }
