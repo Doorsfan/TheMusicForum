@@ -4,7 +4,13 @@ import { useState, useEffect } from 'react';
 import Thread from '../utilities/Thread';
 import UserGroup from '../utilities/UserGroup';
 import LoginPage from './LoginPage';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Link,
+  useNavigate,
+} from 'react-router-dom';
 
 // a "lazy"/automatically created subclass to FetchHelper
 import { factory } from '../utilities/FetchHelper';
@@ -16,12 +22,31 @@ export default function StartPage() {
   const [userGroups, setUserGroups] = useState([]);
   const [loggedIn, setLoggedIn] = useState(false);
 
+  let navigate = useNavigate();
+
   function logout() {
     fetch(`api/logout`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
+    }).then(async (data) => {
+      let loggedout = await data.json();
+      setLoggedIn(false);
+    });
+  }
+
+  function joinGroup(groupName, userName) {
+    let groupInfo = {
+      name: groupName,
+      groupJoiner: document.cookie.split('=')[1],
+    };
+    fetch(`api/joinGroup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(groupInfo),
     }).then(async (data) => {
       let loggedout = await data.json();
       setLoggedIn(false);
@@ -70,9 +95,23 @@ export default function StartPage() {
       <main>
         <div className='GroupsTitle'>Groups</div>
         {userGroups.map(({ id, name, description }) => (
-          <div className='group' key={id} onClick={() => alert(name)}>
+          <div
+            className='group'
+            key={id}
+            onClick={() => {
+              if (loggedIn) {
+                navigate('./Threads/' + name);
+              }
+            }}
+          >
             <h3 className='groupName'>{name}</h3>
             <div className='descriptionDiv'>{description}</div>
+            <button
+              onClick={() => joinGroup(name, document.cookie)}
+              className='joinGroupButton'
+            >
+              Join Group
+            </button>
           </div>
         ))}
         {threads.map(({ id, groupId, title, created, locked, postedBy }) => (

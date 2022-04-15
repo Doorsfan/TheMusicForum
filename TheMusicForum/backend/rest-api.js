@@ -218,6 +218,39 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     }
   });
 
+  app.post('/api/joinGroup', (req, res) => {
+    try {
+      console.log("FIRST")
+
+      let relevantGroup = db.prepare(
+        `SELECT * FROM userGroup WHERE name = '${req.body.name}'`
+      );
+      let relevantGroupResult = relevantGroup.all();
+      console.log("relevantGroupREsult:", relevantGroupResult);
+
+      console.log("req body: ", req.body)
+      let groupJoiner = db.prepare(
+        `SELECT * FROM users WHERE username = '${req.body.groupJoiner}'`
+      );
+      let groupJoinerResult = groupJoiner.all();
+      console.log("Groupjoiners ID: ", groupJoinerResult)
+
+      console.log("SECOND")
+
+      let myStatement = db.prepare(
+        `INSERT INTO groupMember (userId, belongsToGroup, moderatorLevel) VALUES ('${groupJoinerResult[0].id}','${relevantGroupResult[0].id}','user')`
+      );
+      let result = myStatement.run();
+      console.log("THIRD", result)
+
+      res.json(
+        'Successfully joined a group.'
+      );
+    } catch (e) {
+      res.json('Failed to join a group.');
+    }
+  })
+
   app.get('/api/getUserInfo/:username', (req, res) => {
     runMyQuery(
       req,
