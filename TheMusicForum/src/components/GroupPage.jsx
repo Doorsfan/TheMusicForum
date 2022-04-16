@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Thread from '../utilities/Thread';
 import UserGroup from '../utilities/UserGroup';
 import LoginPage from './LoginPage';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Link, useNavigate } from 'react-router-dom';
 
 // a "lazy"/automatically created subclass to FetchHelper
 import { factory } from '../utilities/FetchHelper';
@@ -14,9 +14,12 @@ const { Book, Author } = factory;
 export default function GroupPage() {
   const [threads, setThreads] = useState([]);
   const [loggedIn, setLoggedIn] = useState(false);
+  const [canCreateThread, setCanCreateThread] = useState(false);
+
+  let navigate = useNavigate();
 
   function logout() {
-    fetch(`api/logout`, {
+    fetch(`/api/logout`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -24,7 +27,12 @@ export default function GroupPage() {
     }).then(async (data) => {
       let loggedout = await data.json();
       setLoggedIn(false);
+      navigate('/');
     });
+  }
+
+  function goToCreateThreadPage() {
+    navigate('/CreateNewThread/' + window.location.pathname.split('/')[2]);
   }
 
   // Run this when our component mounts (we can see it on screen)
@@ -34,6 +42,20 @@ export default function GroupPage() {
         setLoggedIn(true);
       }
       setThreads(await Thread.find());
+      fetch(`/api/getGroupsIAmPartOf`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then(async (data) => {
+        let relevantGroups = await data.json();
+        for (let i = 0; i < relevantGroups.length; i++){
+          if (relevantGroups[i] == window.location.pathname.split('/')[2])
+          {
+            setCanCreateThread(true)
+          }
+        }
+      });
     })();
   }, []);
 
@@ -67,6 +89,7 @@ export default function GroupPage() {
       </div>
       <main>
         <div className='GroupsTitle'>Groups</div>
+        {canCreateThread && <button onClick={() => goToCreateThreadPage()} className="createNewThreadButton">Create New Thread</button>}
         {threads.map(({ id, groupId, title, created, locked, postedBy }) => (
           <div className='thread' key={id} onClick={() => alert(title)}>
             <h3 className='topicTitle'>{title}</h3>

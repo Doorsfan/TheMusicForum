@@ -14,6 +14,7 @@ import RegisterPage from './components/RegisterPage';
 import ProfilePage from './components/ProfilePage';
 import CreateNewGroupPage from './components/createNewGroupPage';
 import GroupPage from './components/GroupPage';
+import CreateNewThreadPage from './components/createNewThreadPage';
 
 const { Book, Author } = factory;
 
@@ -32,6 +33,7 @@ export default function App() {
             path='/createNewGroup'
             element={<CreateNewGroupPage />}
           />
+          <Route exact path='/CreateNewThread/:groupName' element={<CreateNewThreadPage />} />
         </Routes>
       </Router>
     </>

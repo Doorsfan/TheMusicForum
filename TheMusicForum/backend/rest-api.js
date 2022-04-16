@@ -218,38 +218,67 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     }
   });
 
+  app.get('/api/getGroupsIAmPartOf', (req, res) => {
+    let groupsIAmPartOf = [];
+    try {
+      if (req.session.user) {
+        let relevantGroups = db.prepare(
+          `SELECT * FROM groupMember WHERE userId = '${req.session.user.id}'`
+        );
+        let allGroups = relevantGroups.all();
+        let groupIDs = [];
+        for (let i = 0; i < allGroups.length; i++) {
+          console.log('i', allGroups[i]);
+
+          groupIDs.push(allGroups[i]['belongsToGroup']);
+        }
+        console.log('groupIDs', groupIDs);
+
+        for (let e = 0; e < groupIDs.length; e++) {
+          let groupIAmOfResult = db.prepare(
+            `SELECT * FROM userGroup WHERE id = '${groupIDs[e]}'`
+          );
+          let groupIAmOfQueriedResult = groupIAmOfResult.all();
+          groupsIAmPartOf.push(groupIAmOfQueriedResult[0]['name']);
+        }
+        console.log('Full listing: ', groupsIAmPartOf);
+        res.json(groupsIAmPartOf);
+      }
+    } catch (e) {
+      res.json('Failed to find any groups.');
+    }
+  });
+
   app.post('/api/joinGroup', (req, res) => {
     try {
-      console.log("FIRST")
+      console.log('FIRST');
 
       let relevantGroup = db.prepare(
         `SELECT * FROM userGroup WHERE name = '${req.body.name}'`
       );
       let relevantGroupResult = relevantGroup.all();
-      console.log("relevantGroupREsult:", relevantGroupResult);
+      console.log('relevantGroupREsult:', relevantGroupResult);
 
-      console.log("req body: ", req.body)
+      console.log('req body: ', req.body);
       let groupJoiner = db.prepare(
         `SELECT * FROM users WHERE username = '${req.body.groupJoiner}'`
       );
       let groupJoinerResult = groupJoiner.all();
-      console.log("Groupjoiners ID: ", groupJoinerResult)
+      console.log('Groupjoiners ID: ', groupJoinerResult);
 
-      console.log("SECOND")
+      console.log('SECOND');
 
       let myStatement = db.prepare(
         `INSERT INTO groupMember (userId, belongsToGroup, moderatorLevel) VALUES ('${groupJoinerResult[0].id}','${relevantGroupResult[0].id}','user')`
       );
       let result = myStatement.run();
-      console.log("THIRD", result)
+      console.log('THIRD', result);
 
-      res.json(
-        'Successfully joined a group.'
-      );
+      res.json('Successfully joined a group.');
     } catch (e) {
       res.json('Failed to join a group.');
     }
-  })
+  });
 
   app.get('/api/getUserInfo/:username', (req, res) => {
     runMyQuery(

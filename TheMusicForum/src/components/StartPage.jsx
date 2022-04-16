@@ -21,6 +21,8 @@ export default function StartPage() {
   const [threads, setThreads] = useState([]);
   const [userGroups, setUserGroups] = useState([]);
   const [loggedIn, setLoggedIn] = useState(false);
+  const [alreadyPartOfGroups, setAlreadyPartOfGroups] = useState([]);
+  const [joinedNewGroup, setJoinedNewGroup] = useState(false);
 
   let navigate = useNavigate();
 
@@ -34,6 +36,10 @@ export default function StartPage() {
       let loggedout = await data.json();
       setLoggedIn(false);
     });
+  }
+
+  function leaveGroup(groupName) {
+    console.log('temp');
   }
 
   function joinGroup(groupName, userName) {
@@ -50,19 +56,62 @@ export default function StartPage() {
     }).then(async (data) => {
       let loggedout = await data.json();
       setLoggedIn(false);
+      setJoinedNewGroup(false);
     });
   }
+
+  const renderJoinButton = (name) => {
+    let foundName = false;
+    if (loggedIn) {
+      for (let e = 0; e < alreadyPartOfGroups.length; e++) {
+        if (name == alreadyPartOfGroups[e]) {
+          foundName = true;
+          return (
+            <button
+              onClick={() => leaveGroup(name, document.cookie)}
+              className='joinGroupButton'
+            >
+              Leave Group
+            </button>
+          );
+        }
+      }
+      if (!foundName) {
+        return (
+          <button
+            onClick={() => joinGroup(name, document.cookie)}
+            className='joinGroupButton'
+          >
+            Join Group
+          </button>
+        );
+      }
+    }
+  };
 
   // Run this when our component mounts (we can see it on screen)
   useEffect(() => {
     (async () => {
       if (document.cookie) {
         setLoggedIn(true);
+      } else {
+        setLoggedIn(false);
       }
       setThreads(await Thread.find());
       setUserGroups(await UserGroup.find());
+      if (!joinedNewGroup) {
+        fetch(`api/getGroupsIAmPartOf`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }).then(async (data) => {
+          setAlreadyPartOfGroups(await data.json());
+          setJoinedNewGroup(true);
+        });
+      }
     })();
-  }, []);
+  }, [alreadyPartOfGroups]);
 
   return (
     <div className='body'>
@@ -106,12 +155,7 @@ export default function StartPage() {
           >
             <h3 className='groupName'>{name}</h3>
             <div className='descriptionDiv'>{description}</div>
-            <button
-              onClick={() => joinGroup(name, document.cookie)}
-              className='joinGroupButton'
-            >
-              Join Group
-            </button>
+            {renderJoinButton(name)}
           </div>
         ))}
         {threads.map(({ id, groupId, title, created, locked, postedBy }) => (
