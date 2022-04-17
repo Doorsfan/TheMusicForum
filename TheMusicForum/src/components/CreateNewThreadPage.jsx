@@ -63,6 +63,10 @@ export default function CreateNewThreadPage() {
               onChange={(e) => setThreadTitle(e.target.value)}
             />
           </label>
+          <label>
+            <p>First Post</p>
+            <textarea className='firstPostInput' rows='5' cols='50'></textarea>
+          </label>
           <button
             className='createThreadButton'
             type='submit'
