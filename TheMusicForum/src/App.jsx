@@ -13,6 +13,8 @@ import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import ProfilePage from './components/ProfilePage';
 import CreateNewGroupPage from './components/createNewGroupPage';
+import GroupPage from './components/GroupPage';
+import CreateNewThreadPage from './components/createNewThreadPage';
 
 const { Book, Author } = factory;
 
@@ -25,10 +27,16 @@ export default function App() {
           <Route exact path='/Login' element={<LoginPage />} />
           <Route exact path='/Register' element={<RegisterPage />} />
           <Route exact path='/Profile/:profileName' element={<ProfilePage />} />
+          <Route exact path='/Threads/:groupName' element={<GroupPage />} />
           <Route
             exact
             path='/createNewGroup'
             element={<CreateNewGroupPage />}
+          />
+          <Route
+            exact
+            path='/CreateNewThread/:groupName'
+            element={<CreateNewThreadPage />}
           />
         </Routes>
       </Router>

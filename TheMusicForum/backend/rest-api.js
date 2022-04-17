@@ -188,6 +188,23 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     });
   }
 
+  app.post('/api/createNewThread', (req, res) => {
+    try {
+      let relevantGroup = db.prepare(
+        `SELECT * FROM userGroup WHERE name = '${req.body.groupName}'`
+      );
+      let groupResult = relevantGroup.all();
+
+      let myStatement = db.prepare(
+        `INSERT INTO thread (id, groupId, title, postedBy) VALUES (NULL, '${groupResult[0]['id']}', '${req.body.title}', '${req.body.postedBy}')`
+      );
+      let result = myStatement.run();
+      res.json('Made a new thread');
+    } catch (e) {
+      res.json('Failed to make a new thread');
+    }
+  });
+
   app.post('/api/createNewGroup', (req, res) => {
     try {
       let myStatement = db.prepare(
@@ -215,6 +232,57 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       );
     } catch (e) {
       res.json('Failed to create the group.');
+    }
+  });
+
+  app.get('/api/getGroupsIAmPartOf', (req, res) => {
+    let groupsIAmPartOf = [];
+    try {
+      if (req.session.user) {
+        let relevantGroups = db.prepare(
+          `SELECT * FROM groupMember WHERE userId = '${req.session.user.id}'`
+        );
+        let allGroups = relevantGroups.all();
+        let groupIDs = [];
+        for (let i = 0; i < allGroups.length; i++) {
+          groupIDs.push(allGroups[i]['belongsToGroup']);
+        }
+
+        for (let e = 0; e < groupIDs.length; e++) {
+          let groupIAmOfResult = db.prepare(
+            `SELECT * FROM userGroup WHERE id = '${groupIDs[e]}'`
+          );
+          let groupIAmOfQueriedResult = groupIAmOfResult.all();
+          groupsIAmPartOf.push(groupIAmOfQueriedResult[0]['name']);
+        }
+
+        res.json(groupsIAmPartOf);
+      }
+    } catch (e) {
+      res.json('Failed to find any groups.');
+    }
+  });
+
+  app.post('/api/joinGroup', (req, res) => {
+    try {
+      let relevantGroup = db.prepare(
+        `SELECT * FROM userGroup WHERE name = '${req.body.name}'`
+      );
+      let relevantGroupResult = relevantGroup.all();
+
+      let groupJoiner = db.prepare(
+        `SELECT * FROM users WHERE username = '${req.body.groupJoiner}'`
+      );
+      let groupJoinerResult = groupJoiner.all();
+
+      let myStatement = db.prepare(
+        `INSERT INTO groupMember (userId, belongsToGroup, moderatorLevel) VALUES ('${groupJoinerResult[0].id}','${relevantGroupResult[0].id}','user')`
+      );
+      let result = myStatement.run();
+
+      res.json('Successfully joined a group.');
+    } catch (e) {
+      res.json('Failed to join a group.');
     }
   });
 

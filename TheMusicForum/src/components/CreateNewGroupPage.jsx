@@ -8,7 +8,7 @@ import {
   useParams,
 } from 'react-router-dom';
 import FetchHelper from '../utilities/FetchHelper';
-import Group from '../utilities/Group';
+import UserGroup from '../utilities/UserGroup';
 
 export default function CreateNewGroupPage() {
   const [description, setDescription] = useState();
