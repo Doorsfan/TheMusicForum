@@ -33,7 +33,11 @@ export default function App() {
             path='/createNewGroup'
             element={<CreateNewGroupPage />}
           />
-          <Route exact path='/CreateNewThread/:groupName' element={<CreateNewThreadPage />} />
+          <Route
+            exact
+            path='/CreateNewThread/:groupName'
+            element={<CreateNewThreadPage />}
+          />
         </Routes>
       </Router>
     </>

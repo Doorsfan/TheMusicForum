@@ -4,16 +4,41 @@ import {
   Route,
   Routes,
   Link,
-  useNavigate,
+  useNavigate
 } from 'react-router-dom';
 
 export default function CreateNewThreadPage() {
   const [threadTitle, setThreadTitle] = useState();
+  let navigate = useNavigate();
+
+  useEffect(() => {
+    (async () => {
+      if(!document.cookie){
+        navigate('/');
+      }
+    })();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(e);
-  }
+
+    let threadInfo = {
+      title: threadTitle,
+      postedBy: document.cookie.split('=')[1],
+      groupName: window.location.pathname.split('/')[2],
+    };
+
+    fetch('/api/createNewThread', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(threadInfo),
+    }).then(async (data) => {
+      let myThread = await data.json();
+      window.location.pathname = '/';
+    });
+  };
 
   return (
     <div>

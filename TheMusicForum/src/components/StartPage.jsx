@@ -158,29 +158,6 @@ export default function StartPage() {
             {renderJoinButton(name)}
           </div>
         ))}
-        {threads.map(({ id, groupId, title, created, locked, postedBy }) => (
-          <div className='thread' key={id} onClick={() => alert(title)}>
-            <h3 className='topicTitle'>{title}</h3>
-            <div className='SpaceBlock' />
-            <div className='createdAndPostedDiv'>
-              <div className='createdDiv'>
-                <p>
-                  Created:{' '}
-                  {new Date(created)
-                    .toLocaleDateString()
-                    .replace(',', '')
-                    .substring(0, 8) +
-                    ' - ' +
-                    new Date(created).toLocaleTimeString().substring(0, 8)}
-                </p>
-              </div>
-              <div className='postedDiv'>
-                <p>Posted by: {postedBy}</p>
-              </div>
-            </div>
-            <div className='SpaceBlock' />
-          </div>
-        ))}
       </main>
     </div>
   );

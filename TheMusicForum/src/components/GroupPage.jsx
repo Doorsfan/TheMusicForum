@@ -4,7 +4,13 @@ import { useState, useEffect } from 'react';
 import Thread from '../utilities/Thread';
 import UserGroup from '../utilities/UserGroup';
 import LoginPage from './LoginPage';
-import { BrowserRouter as Router, Route, Routes, Link, useNavigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Link,
+  useNavigate,
+} from 'react-router-dom';
 
 // a "lazy"/automatically created subclass to FetchHelper
 import { factory } from '../utilities/FetchHelper';
@@ -41,6 +47,9 @@ export default function GroupPage() {
       if (document.cookie) {
         setLoggedIn(true);
       }
+      else {
+        navigate('/')
+      }
       setThreads(await Thread.find());
       fetch(`/api/getGroupsIAmPartOf`, {
         method: 'GET',
@@ -49,10 +58,9 @@ export default function GroupPage() {
         },
       }).then(async (data) => {
         let relevantGroups = await data.json();
-        for (let i = 0; i < relevantGroups.length; i++){
-          if (relevantGroups[i] == window.location.pathname.split('/')[2])
-          {
-            setCanCreateThread(true)
+        for (let i = 0; i < relevantGroups.length; i++) {
+          if (relevantGroups[i] == window.location.pathname.split('/')[2]) {
+            setCanCreateThread(true);
           }
         }
       });
@@ -89,7 +97,14 @@ export default function GroupPage() {
       </div>
       <main>
         <div className='GroupsTitle'>Groups</div>
-        {canCreateThread && <button onClick={() => goToCreateThreadPage()} className="createNewThreadButton">Create New Thread</button>}
+        {canCreateThread && (
+          <button
+            onClick={() => goToCreateThreadPage()}
+            className='createNewThreadButton'
+          >
+            Create New Thread
+          </button>
+        )}
         {threads.map(({ id, groupId, title, created, locked, postedBy }) => (
           <div className='thread' key={id} onClick={() => alert(title)}>
             <h3 className='topicTitle'>{title}</h3>
