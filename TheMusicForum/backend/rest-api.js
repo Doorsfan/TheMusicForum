@@ -235,6 +235,26 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     }
   });
 
+  app.get('/api/getThreadsForGroup/:name', (req, res) => {
+    console.log("Got a request")
+    try {
+      runMyQuery(
+        req,
+        res,
+        req.params,
+        `
+        SELECT *
+        FROM thread
+        WHERE title = :name
+        `,
+        true
+      );
+    } catch (e) {
+      console.log(e);
+      res.json('Failed to find any threads.');
+    }
+  });
+
   app.get('/api/getGroupsIAmPartOf', (req, res) => {
     let groupsIAmPartOf = [];
     try {
