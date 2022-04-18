@@ -41,6 +41,10 @@ export default function GroupPage() {
     navigate('/CreateNewThread/' + window.location.pathname.split('/')[2]);
   }
 
+  function goToThread(threadName) {
+    navigate('/postsForThread/' + threadName);
+  }
+
   // Run this when our component mounts (we can see it on screen)
   useEffect(() => {
     (async () => {
@@ -106,7 +110,11 @@ export default function GroupPage() {
           </button>
         )}
         {threads.map(({ id, groupId, title, created, locked, postedBy }) => (
-          <div className='thread' key={id} onClick={() => alert(title)}>
+          <div
+            className='thread'
+            key={id}
+            onClick={() => goToThread(window.location.pathname.split('/')[2])}
+          >
             <h3 className='topicTitle'>{title}</h3>
             <div className='SpaceBlock' />
             <div className='createdAndPostedDiv'>

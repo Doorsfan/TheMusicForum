@@ -15,6 +15,7 @@ import ProfilePage from './components/ProfilePage';
 import CreateNewGroupPage from './components/createNewGroupPage';
 import GroupPage from './components/GroupPage';
 import CreateNewThreadPage from './components/createNewThreadPage';
+import ThreadPage from './components/ThreadPage';
 
 const { Book, Author } = factory;
 
@@ -37,6 +38,11 @@ export default function App() {
             exact
             path='/CreateNewThread/:groupName'
             element={<CreateNewThreadPage />}
+          />
+          <Route
+            exact
+            path='/postsForThread/:threadName'
+            element={<ThreadPage />}
           />
         </Routes>
       </Router>

@@ -9,6 +9,7 @@ import {
 
 export default function CreateNewThreadPage() {
   const [threadTitle, setThreadTitle] = useState();
+  const [originalThreadPost, setOriginalThreadPost] = useState('');
   let navigate = useNavigate();
 
   useEffect(() => {
@@ -26,6 +27,7 @@ export default function CreateNewThreadPage() {
       title: threadTitle,
       postedBy: document.cookie.split('=')[1],
       groupName: window.location.pathname.split('/')[2],
+      originalThreadPost: originalThreadPost
     };
 
     fetch('/api/createNewThread', {
@@ -65,7 +67,12 @@ export default function CreateNewThreadPage() {
           </label>
           <label>
             <p>First Post</p>
-            <textarea className='firstPostInput' rows='5' cols='50'></textarea>
+            <textarea
+              onChange={(e) => setOriginalThreadPost(e.target.value)}
+              className='firstPostInput'
+              rows='5'
+              cols='50'
+            ></textarea>
           </label>
           <button
             className='createThreadButton'
