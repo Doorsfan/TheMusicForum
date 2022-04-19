@@ -41,16 +41,31 @@ export default function GroupPage() {
     navigate('/CreateNewThread/' + window.location.pathname.split('/')[2]);
   }
 
+  function goToThread(threadName) {
+    navigate('/postsForThread/' + threadName);
+  }
+
   // Run this when our component mounts (we can see it on screen)
   useEffect(() => {
     (async () => {
       if (document.cookie) {
         setLoggedIn(true);
+      } else {
+        navigate('/');
       }
-      else {
-        navigate('/')
-      }
-      setThreads(await Thread.find());
+      fetch(
+        `/api/getThreadsForGroup/` + window.location.pathname.split('/')[2],
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      ).then(async (data) => {
+        let foundThreads = await data.json();
+        setThreads(foundThreads);
+      });
+
       fetch(`/api/getGroupsIAmPartOf`, {
         method: 'GET',
         headers: {
@@ -106,7 +121,7 @@ export default function GroupPage() {
           </button>
         )}
         {threads.map(({ id, groupId, title, created, locked, postedBy }) => (
-          <div className='thread' key={id} onClick={() => alert(title)}>
+          <div className='thread' key={id} onClick={() => goToThread(title)}>
             <h3 className='topicTitle'>{title}</h3>
             <div className='SpaceBlock' />
             <div className='createdAndPostedDiv'>

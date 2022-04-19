@@ -4,16 +4,17 @@ import {
   Route,
   Routes,
   Link,
-  useNavigate
+  useNavigate,
 } from 'react-router-dom';
 
 export default function CreateNewThreadPage() {
   const [threadTitle, setThreadTitle] = useState();
+  const [originalThreadPost, setOriginalThreadPost] = useState('');
   let navigate = useNavigate();
 
   useEffect(() => {
     (async () => {
-      if(!document.cookie){
+      if (!document.cookie) {
         navigate('/');
       }
     })();
@@ -26,6 +27,7 @@ export default function CreateNewThreadPage() {
       title: threadTitle,
       postedBy: document.cookie.split('=')[1],
       groupName: window.location.pathname.split('/')[2],
+      originalThreadPost: originalThreadPost,
     };
 
     fetch('/api/createNewThread', {
@@ -62,6 +64,15 @@ export default function CreateNewThreadPage() {
               type='text'
               onChange={(e) => setThreadTitle(e.target.value)}
             />
+          </label>
+          <label>
+            <p>First Post</p>
+            <textarea
+              onChange={(e) => setOriginalThreadPost(e.target.value)}
+              className='firstPostInput'
+              rows='5'
+              cols='50'
+            ></textarea>
           </label>
           <button
             className='createThreadButton'
