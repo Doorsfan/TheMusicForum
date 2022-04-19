@@ -237,10 +237,14 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.post('/api/createNewPost/:threadName', (req, res) => {
     try {
+      let relevantUser = db.prepare(`SELECT * FROM users WHERE username = '${req.body.postedByUsername}'`)
+      let foundUser = relevantUser.all();
+      let id = foundUser[0]['id'];
       let makeNewPost = db.prepare(
-        `INSERT INTO post (id, postedById, content, blocked, threadId) VALUES (NULL, NULL, '${req.body.content}', '${req.body.blocked}', 7)`
+        `INSERT INTO post (id, postedById, content, blocked, threadId) VALUES (NULL, '${id}', '${req.body.content}', '${req.body.blocked}', '7')`
       );
       let result = makeNewPost.run();
+      console.log(result);
 
       let allPostsForThread = db.prepare(
         `SELECT * FROM post WHERE threadId = 7`
@@ -248,9 +252,24 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       let allThreadsResult = allPostsForThread.all();
       res.json(allThreadsResult);
     } catch (e) {
+      console.log(e);
       res.json(e);
     }
   });
+
+  app.get('/api/getThreadsForGroup/:name', (req, res) => {
+    try {
+      let relevantGroup = db.prepare(`SELECT * FROM userGroup WHERE name = '${req.params.name}'`)
+      let relevantId = relevantGroup.all()[0]['id']
+
+      let relevantThreads = db.prepare(`SELECT * FROM thread WHERE groupId = '${relevantId}'`)
+      let theThreads = relevantThreads.all();
+      res.json(theThreads);
+    }
+    catch (e) {
+      res.json("Found no threads");
+    }
+  })
 
   app.get('/api/getPostsForGroup/:name', (req, res) => {
     try {

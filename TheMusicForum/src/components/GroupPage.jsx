@@ -53,7 +53,19 @@ export default function GroupPage() {
       } else {
         navigate('/');
       }
-      setThreads(await Thread.find());
+      fetch(
+        `/api/getThreadsForGroup/` + window.location.pathname.split('/')[2],
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      ).then(async (data) => {
+        let foundThreads = await data.json();
+        setThreads(foundThreads);
+      });
+
       fetch(`/api/getGroupsIAmPartOf`, {
         method: 'GET',
         headers: {
