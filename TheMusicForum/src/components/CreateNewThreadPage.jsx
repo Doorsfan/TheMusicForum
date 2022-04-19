@@ -4,7 +4,7 @@ import {
   Route,
   Routes,
   Link,
-  useNavigate
+  useNavigate,
 } from 'react-router-dom';
 
 export default function CreateNewThreadPage() {
@@ -14,7 +14,7 @@ export default function CreateNewThreadPage() {
 
   useEffect(() => {
     (async () => {
-      if(!document.cookie){
+      if (!document.cookie) {
         navigate('/');
       }
     })();
@@ -27,7 +27,7 @@ export default function CreateNewThreadPage() {
       title: threadTitle,
       postedBy: document.cookie.split('=')[1],
       groupName: window.location.pathname.split('/')[2],
-      originalThreadPost: originalThreadPost
+      originalThreadPost: originalThreadPost,
     };
 
     fetch('/api/createNewThread', {

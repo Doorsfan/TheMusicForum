@@ -50,9 +50,8 @@ export default function GroupPage() {
     (async () => {
       if (document.cookie) {
         setLoggedIn(true);
-      }
-      else {
-        navigate('/')
+      } else {
+        navigate('/');
       }
       setThreads(await Thread.find());
       fetch(`/api/getGroupsIAmPartOf`, {
@@ -110,11 +109,7 @@ export default function GroupPage() {
           </button>
         )}
         {threads.map(({ id, groupId, title, created, locked, postedBy }) => (
-          <div
-            className='thread'
-            key={id}
-            onClick={() => goToThread(window.location.pathname.split('/')[2])}
-          >
+          <div className='thread' key={id} onClick={() => goToThread(title)}>
             <h3 className='topicTitle'>{title}</h3>
             <div className='SpaceBlock' />
             <div className='createdAndPostedDiv'>

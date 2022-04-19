@@ -44,7 +44,7 @@ h3 {
   border: solid 1px black;
 }
 
-.registerForm{
+.registerForm {
   display: block;
   background-color: white;
   width: max-content;
@@ -119,28 +119,28 @@ main {
   grid-template-columns: 10px auto max-content auto max-content max-content 80px;
 }
 
-.createNewGroupLink{
+.createNewGroupLink {
   color: black;
   text-decoration: none;
 }
 
-.createNewThreadButton{
+.createNewThreadButton {
   margin-left: auto;
   margin-right: auto;
   display: block;
   width: max-content;
 }
 
-.createNewThreadButton{
+.createNewThreadButton {
   margin-bottom: 15px;
   margin-top: 15px;
 }
 
-.postResponseButton{
+.postResponseButton {
   margin-top: 10px;
 }
 
-.mainPostInputDiv{
+.mainPostInputDiv {
   margin-bottom: 20px;
   width: max-content;
   display: block;
@@ -148,14 +148,14 @@ main {
   margin-right: auto;
 }
 
-.postResponseButton{
+.postResponseButton {
   width: max-content;
   display: block;
   margin-left: auto;
   margin-right: auto;
 }
 
-.createNewPostButton{
+.createNewPostButton {
   margin-bottom: 20px;
   display: block;
   width: max-content;
@@ -163,7 +163,7 @@ main {
   margin-right: auto;
 }
 
-.thread{
+.post {
   background-color: red;
   width: 800px;
   height: max-content;
@@ -172,14 +172,14 @@ main {
   margin-right: auto;
 }
 
-.createThreadButton{
+.createThreadButton {
   display: block;
   margin-left: auto;
   margin-right: auto;
   margin-top: 15px;
 }
 
-.threadForm{
+.threadForm {
   width: max-content;
   margin-left: auto;
   margin-right: auto;
@@ -187,7 +187,7 @@ main {
   text-align: center;
 }
 
-.createNewGroupDiv{
+.createNewGroupDiv {
   display: block;
   text-decoration: none;
   color: black;
@@ -198,22 +198,22 @@ main {
   margin-top: 10px;
 }
 
-.GroupsTitle{
+.GroupsTitle {
   font-size: 30px;
   font-weight: bolder;
   text-align: center;
 }
 
-.logOutText{
+.logOutText {
   position: relative;
   left: -30px;
 }
-.profileText{
+.profileText {
   width: max-content;
   position: relative;
   left: -20px;
 }
-.profileLink{
+.profileLink {
   text-decoration: none;
   color: black;
   width: 80px;
@@ -228,7 +228,9 @@ main {
   margin-top: -10px;
 }
 
-.roleText, .usernameText, .groupsText{
+.roleText,
+.usernameText,
+.groupsText {
   width: max-content;
   margin-left: auto;
   margin-right: auto;

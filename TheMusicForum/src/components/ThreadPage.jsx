@@ -8,19 +8,25 @@ import {
 } from 'react-router-dom';
 
 export default function ThreadPage() {
-  const [threads, setThreads] = useState([]);
+  const [posts, setPosts] = useState([]);
   const [creatingNewResponse, setCreatingNewResponse] = useState(false);
   const [responseContent, setResponseContent] = useState('');
 
   function postThreadResponse(responseContent) {
+    let myResponse = {
+      content: responseContent,
+      blocked: 0,
+    };
+
     fetch('/api/createNewPost/' + window.location.pathname.split('/')[2], {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(credentials),
+      body: JSON.stringify(myResponse),
     }).then(async (data) => {
-      let myUser = await data.json();
+      let myPosts = await data.json();
+      setPosts(myPosts);
     });
   }
 
@@ -30,19 +36,15 @@ export default function ThreadPage() {
 
   useEffect(() => {
     (async () => {
-      console.log('lol');
-      fetch(
-        `/api/getThreadsForGroup/` + window.location.pathname.split('/')[2],
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      ).then(async (data) => {
+      fetch(`/api/getPostsForGroup/` + window.location.pathname.split('/')[2], {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then(async (data) => {
         let foundThreads = await data.json();
-        console.log(foundThreads);
-        setThreads(foundThreads);
+
+        setPosts(foundThreads);
       });
     })();
   }, []);
@@ -77,7 +79,7 @@ export default function ThreadPage() {
           </div>
           <button
             onClick={() => {
-              postThreadResponse(responseContent)
+              postThreadResponse(responseContent);
             }}
             className='postResponseButton'
           >
@@ -85,20 +87,13 @@ export default function ThreadPage() {
           </button>
         </div>
       )}
-      {threads.map(({ id, timestamp, title, content, blocked, created }) => (
-        <div
-          className='thread'
-          key={id}
-          onClick={() => {
-            if (loggedIn) {
-              navigate('./Thread/' + title);
-            }
-          }}
-        >
-          <div className='postContent'>{content}</div>
-          <div className='postedAt'>{created}</div>
-        </div>
-      ))}
+      {posts.length > 0 &&
+        posts.map(({ id, postedById, content, blocked, created }) => (
+          <div className='post' key={id}>
+            <div className='postContent'>{content}</div>
+            <div className='postedAt'>{created}</div>
+          </div>
+        ))}
     </div>
   );
 }
