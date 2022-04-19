@@ -44,6 +44,16 @@ export default function ProfilePage() {
             setUserName(relevantInfo.username);
             setUserGroups('bla');
           });
+          fetch(`/api/getGroupsIAmPartOf`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }).then(async (data) => {
+            let relevantInfo = await data.json();
+            setUserName(relevantInfo.username);
+            setUserGroups('bla');
+          });
         }
         /*else {
           window.location = '/';
