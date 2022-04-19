@@ -235,20 +235,30 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     }
   });
 
+  app.post('/api/createNewPost/:threadName', (req, res) => {
+    
+  })
+
   app.get('/api/getThreadsForGroup/:name', (req, res) => {
-    console.log("Got a request")
+    console.log(req.params['name']);
     try {
-      runMyQuery(
-        req,
-        res,
-        req.params,
-        `
-        SELECT *
-        FROM thread
-        WHERE title = :name
-        `,
-        true
+      let myStatement = db.prepare(
+        `SELECT * FROM userGroup WHERE name = '${req.params['name']}'`
       );
+      console.log("SQL", myStatement);
+      
+      let myGroup = myStatement.all();
+      console.log("myGroup: ", myGroup)
+
+      let relevantId = myGroup[0]['id'];
+      console.log("relevantId: ", relevantId)
+
+      let relevantThreads = db.prepare(`SELECT * FROM thread WHERE groupId = '${relevantId}'`)
+      let threadsResult = relevantThreads.all();
+
+      let posts = db.prepare(`SELECT * FROM post WHERE threadid = '${threadsResult[0]['id']}'`)
+      let myPosts = posts.all();
+      res.json(myPosts);
     } catch (e) {
       console.log(e);
       res.json('Failed to find any threads.');

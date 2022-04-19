@@ -136,6 +136,42 @@ main {
   margin-top: 15px;
 }
 
+.postResponseButton{
+  margin-top: 10px;
+}
+
+.mainPostInputDiv{
+  margin-bottom: 20px;
+  width: max-content;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.postResponseButton{
+  width: max-content;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.createNewPostButton{
+  margin-bottom: 20px;
+  display: block;
+  width: max-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.thread{
+  background-color: red;
+  width: 800px;
+  height: max-content;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .createThreadButton{
   display: block;
   margin-left: auto;
