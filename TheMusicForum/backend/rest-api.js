@@ -237,7 +237,9 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.post('/api/createNewPost/:threadName', (req, res) => {
     try {
-      let relevantUser = db.prepare(`SELECT * FROM users WHERE username = '${req.body.postedByUsername}'`)
+      let relevantUser = db.prepare(
+        `SELECT * FROM users WHERE username = '${req.body.postedByUsername}'`
+      );
       let foundUser = relevantUser.all();
       let id = foundUser[0]['id'];
       let makeNewPost = db.prepare(
@@ -252,24 +254,26 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       let allThreadsResult = allPostsForThread.all();
       res.json(allThreadsResult);
     } catch (e) {
-      console.log(e);
       res.json(e);
     }
   });
 
   app.get('/api/getThreadsForGroup/:name', (req, res) => {
     try {
-      let relevantGroup = db.prepare(`SELECT * FROM userGroup WHERE name = '${req.params.name}'`)
-      let relevantId = relevantGroup.all()[0]['id']
+      let relevantGroup = db.prepare(
+        `SELECT * FROM userGroup WHERE name = '${req.params.name}'`
+      );
+      let relevantId = relevantGroup.all()[0]['id'];
 
-      let relevantThreads = db.prepare(`SELECT * FROM thread WHERE groupId = '${relevantId}'`)
+      let relevantThreads = db.prepare(
+        `SELECT * FROM thread WHERE groupId = '${relevantId}'`
+      );
       let theThreads = relevantThreads.all();
       res.json(theThreads);
+    } catch (e) {
+      res.json('Found no threads');
     }
-    catch (e) {
-      res.json("Found no threads");
-    }
-  })
+  });
 
   app.get('/api/getPostsForGroup/:name', (req, res) => {
     try {

@@ -16,9 +16,9 @@ export default function ThreadPage() {
     let myResponse = {
       content: responseContent,
       blocked: 0,
-      postedByUsername: document.cookie.split('=')[1]
+      postedByUsername: document.cookie.split('=')[1],
     };
-    console.log(document.cookie)
+
     fetch('/api/createNewPost/' + window.location.pathname.split('/')[2], {
       method: 'POST',
       headers: {
@@ -44,7 +44,6 @@ export default function ThreadPage() {
         },
       }).then(async (data) => {
         let foundThreads = await data.json();
-        console.log(foundThreads);
         setPosts(foundThreads);
       });
     })();
