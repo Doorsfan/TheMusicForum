@@ -16,6 +16,7 @@ import CreateNewGroupPage from './components/createNewGroupPage';
 import GroupPage from './components/GroupPage';
 import CreateNewThreadPage from './components/createNewThreadPage';
 import ThreadPage from './components/ThreadPage';
+import GroupListingPage from './components/GroupListingPage';
 
 const { Book, Author } = factory;
 
@@ -43,6 +44,11 @@ export default function App() {
             exact
             path='/postsForThread/:threadName'
             element={<ThreadPage />}
+          />
+          <Route
+            exact
+            path='/memberListing/:groupName'
+            element={<GroupListingPage />}
           />
         </Routes>
       </Router>

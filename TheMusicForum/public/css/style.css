@@ -163,6 +163,28 @@ main {
   margin-right: auto;
 }
 
+.titleItemsGrid {
+  display: grid;
+  grid-template-columns: 40% max-content 30px max-content 30px max-content auto;
+}
+
+.groupItemInProfile {
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+.userGridInProfile {
+  display: grid;
+  grid-template-columns: auto max-content 30px max-content 30px max-content 30px max-content 30px max-content auto;
+  background-color: white;
+  border: solid 1px black;
+  width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+
 .post {
   background-color: red;
   width: 800px;
