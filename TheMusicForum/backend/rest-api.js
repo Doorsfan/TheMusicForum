@@ -246,7 +246,6 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `INSERT INTO post (id, postedById, content, blocked, threadId) VALUES (NULL, '${id}', '${req.body.content}', '${req.body.blocked}', '7')`
       );
       let result = makeNewPost.run();
-      console.log(result);
 
       let allPostsForThread = db.prepare(
         `SELECT * FROM post WHERE threadId = 7`
@@ -289,6 +288,58 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       res.json(myPosts);
     } catch (e) {
       res.json('Failed to find any threads.');
+    }
+  });
+
+  app.delete('/api/removeUserFromGroup/:name', (req, res) => {
+    try {
+      let relevantGroup = db.prepare(
+        `SELECT * FROM userGroup WHERE name = '${req.params.name}'`
+      );
+      let groupId = relevantGroup.all()[0]['id'];
+
+      let relevantUser = db.prepare(
+        `SELECT * FROM users WHERE username = '${req.body.relevantUser}'`
+      );
+      let userId = relevantUser.all()[0]['id'];
+      let removeUserFromGroup = db.prepare(
+        `DELETE FROM groupMember WHERE belongsToGroup = '${groupId}' AND userId = '${userId}'`
+      );
+      let result = removeUserFromGroup.run();
+
+      res.json(result);
+    } catch (e) {
+      console.log(e);
+      res.json('Something went wrong.');
+    }
+  });
+
+  app.get('/api/getGroupMembers/:name', (req, res) => {
+    try {
+      let relevantGroup = db.prepare(
+        `SELECT * FROM userGroup WHERE name = '${req.params['name']}'`
+      );
+      let groupId = relevantGroup.all()[0]['id'];
+
+      let groupMembersQuery = db.prepare(
+        `SELECT * FROM groupMember WHERE belongsToGroup = '${groupId}'`
+      );
+
+      let groupMembers = groupMembersQuery.all().map((user) => {
+        var info = Object.assign({}, user);
+
+        let groupMemberName = db.prepare(
+          `SELECT username FROM users WHERE id = '${info.userId}'`
+        );
+        info.relevantUsername = groupMemberName.all()[0]['username'];
+        info.belongsToGroup = req.params['name'];
+        delete info.userId;
+        return info;
+      });
+
+      res.json(groupMembers);
+    } catch (e) {
+      res.json('None in the group.');
     }
   });
 

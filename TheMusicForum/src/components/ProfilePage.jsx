@@ -14,6 +14,8 @@ export default function ProfilePage() {
   const [username, setUserName] = useState();
   const [userGroups, setUserGroups] = useState();
 
+  let navigate = useNavigate();
+
   useEffect(() => {
     (async () => {
       fetch('/api/getSession', {
@@ -42,7 +44,16 @@ export default function ProfilePage() {
           }).then(async (data) => {
             let relevantInfo = await data.json();
             setUserName(relevantInfo.username);
-            setUserGroups('bla');
+          });
+          fetch(`/api/getGroupsIAmPartOf`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }).then(async (data) => {
+            let relevantInfo = await data.json();
+
+            setUserGroups(relevantInfo);
           });
         }
         /*else {
@@ -72,7 +83,22 @@ export default function ProfilePage() {
       </div>
       {userRole && <div className='roleText'>Site Role: {userRole}</div>}
       {username && <div className='usernameText'>Username: {username}</div>}
-      {userGroups && <div className='groupsText'>Groups: {userGroups}</div>}
+      {userGroups && (
+        <div className='groupsText'>
+          Groups:
+          {userGroups.map((item) => (
+            <div
+              className='groupItemInProfile'
+              onClick={() => {
+                navigate('../../memberListing/' + item);
+              }}
+              key={item}
+            >
+              <div className='group'>{item}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
