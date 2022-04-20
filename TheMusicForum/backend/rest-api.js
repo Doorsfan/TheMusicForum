@@ -291,6 +291,45 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     }
   });
 
+  app.put('/api/unblockUserFromGroup', (req, res) => {
+    try {
+      let relevantGroupId = db.prepare(
+        `SELECT * FROM userGroup WHERE name = '${req.body.groupName}'`
+      );
+      let wantedId = relevantGroupId.all()[0]['id'];
+
+      let relevantUser = db.prepare(
+        `SELECT * FROM users WHERE username = '${req.body.relevantUser}'`
+      );
+      let userId = relevantUser.all()[0]['id'];
+
+      let relevantUpdate = db.prepare(
+        `UPDATE groupMember SET blocked = 0 WHERE userId = '${userId}' AND belongsToGroup = '${wantedId}'`
+      );
+      let relevantResult = relevantUpdate.run();
+      res.json('Unblocked user');
+    } catch (e) {
+      res.json('Something went wrong.');
+    }
+  })
+
+  app.put('/api/blockUserFromGroup', (req, res) => {
+    try {
+      let relevantGroupId = db.prepare(`SELECT * FROM userGroup WHERE name = '${req.body.groupName}'`)
+      let wantedId = relevantGroupId.all()[0]['id']
+
+      let relevantUser = db.prepare(`SELECT * FROM users WHERE username = '${req.body.relevantUser}'`)
+      let userId = relevantUser.all()[0]['id']
+
+      let relevantUpdate = db.prepare(`UPDATE groupMember SET blocked = 1 WHERE userId = '${userId}' AND belongsToGroup = '${wantedId}'`)
+      let relevantResult = relevantUpdate.run();
+      res.json("Blocked user");
+    }
+    catch (e) {
+      res.json("Something went wrong.");
+    }
+  })
+
   app.delete('/api/removeUserFromGroup/:name', (req, res) => {
     try {
       let relevantGroup = db.prepare(

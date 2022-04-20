@@ -173,9 +173,18 @@ main {
   margin-bottom: 6px;
 }
 
+.blockUserButton{
+  width: 200px;
+}
+
+.SpaceBlock{
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
 .userGridInProfile {
   display: grid;
-  grid-template-columns: auto max-content 30px max-content 30px max-content 30px max-content 30px max-content auto;
+  grid-template-columns: auto max-content max-content max-content max-content max-content max-content max-content max-content max-content max-content max-content max-content auto;
   background-color: white;
   border: solid 1px black;
   width: 800px;
@@ -183,6 +192,7 @@ main {
   margin-right: auto;
   padding-top: 15px;
   padding-bottom: 15px;
+  padding-left: 20px;
 }
 
 .post {
