@@ -155,6 +155,22 @@ main {
   margin-right: auto;
 }
 
+.invitePersonForm{
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: max-content;
+  margin-top: 10px;
+}
+
+.invitePersonButton{
+  display: block;
+  width: max-content;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 10px;
+}
+
 .createNewPostButton {
   margin-bottom: 20px;
   display: block;

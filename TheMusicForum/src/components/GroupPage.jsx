@@ -92,7 +92,7 @@ export default function GroupPage() {
         }
       ).then(async (data) => {
         let result = await data.json();
-        setCanCreateThread(false);
+        setCanCreateThread(result);
       });
     })();
   }, []);

@@ -235,6 +235,56 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     }
   });
 
+  app.post('/api/createInvite', (req, res) => {
+    try {
+      let targetUser = db.prepare(
+        `SELECT * FROM users WHERE username = '${req.body.targetUser}'`
+      );
+      if (targetUser.all().length > 0) {
+        let targetId = targetUser.all()[0]['id'];
+
+        let fromUser = db.prepare(
+          `SELECT * FROM users WHERE username = '${req.body.fromUser}'`
+        );
+        let sentFromId = fromUser.all()[0]['id'];
+
+        let targetGroup = db.prepare(
+          `SELECT * FROM userGroup WHERE name = '${req.body.groupName}'`
+        );
+        let groupId = targetGroup.all()[0]['id'];
+
+        let seeIfInviteAlreadyExists = db.prepare(
+          `SELECT * FROM invitation WHERE fromUserId = '${sentFromId}' AND toUserId = '${targetId}' AND groupId = '${groupId}'`
+        );
+
+        let seeIfAlreadyInGroup = db.prepare(
+          `SELECT * FROM groupMember WHERE userId = '${targetId}' AND belongsToGroup = '${groupId}'`
+        );
+        let resultOfAlreadyInGroup = seeIfAlreadyInGroup.all();
+        if (resultOfAlreadyInGroup.length > 0) {
+          res.json('Failed to create invite, person already in group.');
+        } else {
+          let inviteResult = seeIfInviteAlreadyExists.all();
+          if (inviteResult.length > 0) {
+            res.json('That person already had an invite to that group.');
+          } else {
+            let myStatement = db.prepare(
+              `INSERT INTO invitation (id, fromUserId, toUserId, groupId) VALUES (NULL,'${sentFromId}','${targetId}', '${groupId}')`
+            );
+            let result = myStatement.run();
+
+            res.json('Invite sent.');
+          }
+        }
+      } else {
+        res.json('That User does not exist.');
+      }
+    } catch (e) {
+      console.log(e);
+      res.json('Failed to create invite');
+    }
+  });
+
   app.post('/api/createNewPost/:threadName', (req, res) => {
     try {
       let relevantUser = db.prepare(
@@ -242,13 +292,18 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       );
       let foundUser = relevantUser.all();
       let id = foundUser[0]['id'];
+
+      let relevantThread = db.prepare(
+        `SELECT * FROM thread WHERE title = '${req.params['threadName']}'`
+      );
+      let threadResult = relevantThread.all()[0]['id'];
       let makeNewPost = db.prepare(
-        `INSERT INTO post (id, postedById, content, blocked, threadId) VALUES (NULL, '${id}', '${req.body.content}', '${req.body.blocked}', '7')`
+        `INSERT INTO post (id, postedById, content, blocked, threadId) VALUES (NULL, '${id}', '${req.body.content}', '${req.body.blocked}', '${threadResult}')`
       );
       let result = makeNewPost.run();
 
       let allPostsForThread = db.prepare(
-        `SELECT * FROM post WHERE threadId = 7`
+        `SELECT * FROM post WHERE threadId = '${threadResult}'`
       );
       let allThreadsResult = allPostsForThread.all();
       res.json(allThreadsResult);
@@ -396,7 +451,6 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       );
 
       let allowPosting = canPostRequest.all()[0]['blocked'] == 1 ? false : true;
-
       res.json(allowPosting);
     } catch (e) {
       console.log(e);
