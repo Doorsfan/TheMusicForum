@@ -163,6 +163,10 @@ main {
   margin-right: auto;
 }
 
+.promoteUserButton {
+  margin-left: 15px;
+}
+
 .titleItemsGrid {
   display: grid;
   grid-template-columns: 40% max-content 30px max-content 30px max-content auto;
@@ -173,18 +177,18 @@ main {
   margin-bottom: 6px;
 }
 
-.blockUserButton{
+.blockUserButton {
   width: 200px;
 }
 
-.blockedDiv{
+.blockedDiv {
   width: max-content;
   margin-left: auto;
   margin-right: auto;
   margin-top: 30px;
 }
 
-.SpaceBlock{
+.SpaceBlock {
   margin-left: 20px;
   margin-right: 20px;
 }
