@@ -11,6 +11,12 @@ export default function GroupListingPage() {
   const [relevantUsers, setRelevantUsers] = useState();
   const [isAnAdmin, setIsAnAdmin] = useState(false);
   const [isAnOwner, setIsAnOwner] = useState(false);
+  const [personToInvite, setPersonToInvite] = useState();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    invitePerson(personToInvite);
+  };
 
   function unblockFromGroup(username) {
     let relevantInfo = {
@@ -129,6 +135,23 @@ export default function GroupListingPage() {
         }
         setRelevantUsers(relevantInfo);
       });
+    });
+  }
+
+  function invitePerson() {
+    let relevantInfo = {
+      targetUser: personToInvite,
+      fromUser: document.cookie.split('=')[1],
+      groupName: window.location.pathname.split('/')[2],
+    };
+    fetch('/api/createInvite', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(relevantInfo),
+    }).then(async (data) => {
+      let result = await data.json();
     });
   }
 
@@ -324,6 +347,17 @@ export default function GroupListingPage() {
             </div>
           ))}
       </div>
+      <form className='invitePersonForm' onSubmit={handleSubmit}>
+        <input
+          onChange={(e) => setPersonToInvite(e.target.value)}
+          type='text'
+          className='inviteInput'
+          placeholder='Who do you wish to invite?'
+        ></input>
+        <button className='invitePersonButton' type='submit'>
+          Invite
+        </button>
+      </form>
     </div>
   );
 }
