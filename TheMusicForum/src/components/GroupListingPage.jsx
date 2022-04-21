@@ -25,7 +25,44 @@ export default function GroupListingPage() {
       body: JSON.stringify(relevantInfo),
     }).then(async (data) => {
       let result = await data.json();
-      
+
+      fetch(`/api/getGroupMembers/` + window.location.pathname.split('/')[2], {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then(async (data) => {
+        let relevantInfo = await data.json();
+        for (let user of relevantInfo) {
+          if (
+            (user['moderatorLevel'] == 'owner' ||
+              user['moderatorLevel'] == 'admin' ||
+              user['moderatorLevel'] == 'moderator') &&
+            user['relevantUsername'] == document.cookie.split('=')[1]
+          ) {
+            setIsAnAdmin(true);
+          }
+        }
+        setRelevantUsers(relevantInfo);
+      });
+    });
+  }
+
+  function demoteUser(username) {
+    let relevantInfo = {
+      relevantUser: username,
+      groupName: window.location.pathname.split('/')[2],
+    };
+
+    fetch(`/api/demoteUser`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(relevantInfo),
+    }).then(async (data) => {
+      let result = await data.json();
+
       fetch(`/api/getGroupMembers/` + window.location.pathname.split('/')[2], {
         method: 'GET',
         headers: {
@@ -213,7 +250,15 @@ export default function GroupListingPage() {
               <div className='SpaceBlock' />
               {item.moderatorLevel}
               <div className='SpaceBlock' />
-              <button className='demoteUser'>Demote User</button>
+              {item.moderatorLevel != 'user' && (
+                <button
+                  onClick={() => demoteUser(item.relevantUsername)}
+                  className='demoteUser'
+                >
+                  Demote User
+                </button>
+              )}
+              {item.moderatorLevel == 'user' && <div className='SpaceBlock' />}
               <div className='SpaceBlock' />
             </div>
           ))}
