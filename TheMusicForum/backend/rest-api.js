@@ -256,16 +256,25 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         let seeIfInviteAlreadyExists = db.prepare(
           `SELECT * FROM invitation WHERE fromUserId = '${sentFromId}' AND toUserId = '${targetId}' AND groupId = '${groupId}'`
         );
-        let inviteResult = seeIfInviteAlreadyExists.all();
-        if (inviteResult.length > 0) {
-          res.json('That person already had an invite to that group.');
-        } else {
-          let myStatement = db.prepare(
-            `INSERT INTO invitation (id, fromUserId, toUserId, groupId) VALUES (NULL,'${sentFromId}','${targetId}', '${groupId}')`
-          );
-          let result = myStatement.run();
 
-          res.json('Invite sent.');
+        let seeIfAlreadyInGroup = db.prepare(
+          `SELECT * FROM groupMember WHERE userId = '${targetId}' AND belongsToGroup = '${groupId}'`
+        );
+        let resultOfAlreadyInGroup = seeIfAlreadyInGroup.all();
+        if (resultOfAlreadyInGroup.length > 0) {
+          res.json('Failed to create invite, person already in group.');
+        } else {
+          let inviteResult = seeIfInviteAlreadyExists.all();
+          if (inviteResult.length > 0) {
+            res.json('That person already had an invite to that group.');
+          } else {
+            let myStatement = db.prepare(
+              `INSERT INTO invitation (id, fromUserId, toUserId, groupId) VALUES (NULL,'${sentFromId}','${targetId}', '${groupId}')`
+            );
+            let result = myStatement.run();
+
+            res.json('Invite sent.');
+          }
         }
       } else {
         res.json('That User does not exist.');
