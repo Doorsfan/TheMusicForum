@@ -79,6 +79,21 @@ export default function GroupPage() {
           }
         }
       });
+
+      fetch(
+        `/api/canIPostInThisGroup/${window.location.pathname.split('/')[2]}/${
+          document.cookie.split('=')[1]
+        }`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      ).then(async (data) => {
+        let result = await data.json();
+        setCanCreateThread(false);
+      });
     })();
   }, []);
 
