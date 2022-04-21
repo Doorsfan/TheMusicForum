@@ -10,6 +10,7 @@ import {
 export default function GroupListingPage() {
   const [relevantUsers, setRelevantUsers] = useState();
   const [isAnAdmin, setIsAnAdmin] = useState(false);
+  const [isAnOwner, setIsAnOwner] = useState(false);
 
   function unblockFromGroup(username) {
     let relevantInfo = {
@@ -41,6 +42,49 @@ export default function GroupListingPage() {
             user['relevantUsername'] == document.cookie.split('=')[1]
           ) {
             setIsAnAdmin(true);
+          }
+          if (user['moderatorLevel'] == 'owner') {
+            setIsAnOwner(true);
+          }
+        }
+        setRelevantUsers(relevantInfo);
+      });
+    });
+  }
+
+  function promoteUser(username) {
+    let relevantInfo = {
+      relevantUser: username,
+      groupName: window.location.pathname.split('/')[2],
+    };
+
+    fetch(`/api/promoteUser`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(relevantInfo),
+    }).then(async (data) => {
+      let result = await data.json();
+
+      fetch(`/api/getGroupMembers/` + window.location.pathname.split('/')[2], {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then(async (data) => {
+        let relevantInfo = await data.json();
+        for (let user of relevantInfo) {
+          if (
+            (user['moderatorLevel'] == 'owner' ||
+              user['moderatorLevel'] == 'admin' ||
+              user['moderatorLevel'] == 'moderator') &&
+            user['relevantUsername'] == document.cookie.split('=')[1]
+          ) {
+            setIsAnAdmin(true);
+          }
+          if (user['moderatorLevel'] == 'owner') {
+            setIsAnOwner(true);
           }
         }
         setRelevantUsers(relevantInfo);
@@ -79,6 +123,9 @@ export default function GroupListingPage() {
           ) {
             setIsAnAdmin(true);
           }
+          if (user['moderatorLevel'] == 'owner') {
+            setIsAnOwner(true);
+          }
         }
         setRelevantUsers(relevantInfo);
       });
@@ -115,6 +162,9 @@ export default function GroupListingPage() {
             user['relevantUsername'] == document.cookie.split('=')[1]
           ) {
             setIsAnAdmin(true);
+          }
+          if (user['moderatorLevel'] == 'owner') {
+            setIsAnOwner(true);
           }
         }
         setRelevantUsers(relevantInfo);
@@ -166,6 +216,9 @@ export default function GroupListingPage() {
             user['relevantUsername'] == document.cookie.split('=')[1]
           ) {
             setIsAnAdmin(true);
+          }
+          if (user['moderatorLevel'] == 'owner') {
+            setIsAnOwner(true);
           }
         }
         setRelevantUsers(relevantInfo);
@@ -250,12 +303,20 @@ export default function GroupListingPage() {
               <div className='SpaceBlock' />
               {item.moderatorLevel}
               <div className='SpaceBlock' />
-              {item.moderatorLevel != 'user' && (
+              {item.moderatorLevel != 'user' && isAnAdmin && (
                 <button
                   onClick={() => demoteUser(item.relevantUsername)}
                   className='demoteUser'
                 >
                   Demote User
+                </button>
+              )}
+              {item.moderatorLevel == 'user' && isAnOwner && (
+                <button
+                  onClick={() => promoteUser(item.relevantUsername)}
+                  className='promoteUserButton'
+                >
+                  Promote User
                 </button>
               )}
               {item.moderatorLevel == 'user' && <div className='SpaceBlock' />}
