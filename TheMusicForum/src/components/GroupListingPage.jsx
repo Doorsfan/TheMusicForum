@@ -347,17 +347,19 @@ export default function GroupListingPage() {
             </div>
           ))}
       </div>
-      <form className='invitePersonForm' onSubmit={handleSubmit}>
-        <input
-          onChange={(e) => setPersonToInvite(e.target.value)}
-          type='text'
-          className='inviteInput'
-          placeholder='Who do you wish to invite?'
-        ></input>
-        <button className='invitePersonButton' type='submit'>
-          Invite
-        </button>
-      </form>
+      {isAnAdmin && (
+        <form className='invitePersonForm' onSubmit={handleSubmit}>
+          <input
+            onChange={(e) => setPersonToInvite(e.target.value)}
+            type='text'
+            className='inviteInput'
+            placeholder='Who do you wish to invite?'
+          ></input>
+          <button className='invitePersonButton' type='submit'>
+            Invite
+          </button>
+        </form>
+      )}
     </div>
   );
 }
