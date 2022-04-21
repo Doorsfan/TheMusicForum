@@ -11,6 +11,7 @@ export default function ThreadPage() {
   const [posts, setPosts] = useState([]);
   const [creatingNewResponse, setCreatingNewResponse] = useState(false);
   const [responseContent, setResponseContent] = useState('');
+  const [allowPosting, setAllowPosting] = useState(true);
 
   function postThreadResponse(responseContent) {
     let myResponse = {
@@ -37,6 +38,21 @@ export default function ThreadPage() {
 
   useEffect(() => {
     (async () => {
+      fetch(
+        `/api/canIPostInThisThread/${window.location.pathname.split('/')[2]}/${
+          document.cookie.split('=')[1]
+        }`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      ).then(async (data) => {
+        let result = await data.json();
+        setAllowPosting(result);
+      });
+
       fetch(`/api/getPostsForGroup/` + window.location.pathname.split('/')[2], {
         method: 'GET',
         headers: {
@@ -63,9 +79,14 @@ export default function ThreadPage() {
           </Link>
         </div>
       </div>
-      <button className='createNewPostButton' onClick={createNewPost}>
-        Create New Post
-      </button>
+      {allowPosting && (
+        <button className='createNewPostButton' onClick={createNewPost}>
+          Create New Post
+        </button>
+      )}
+      {!allowPosting && (
+        <div className='blockedDiv'>You are blocked from this group.</div>
+      )}
       {creatingNewResponse && (
         <div className='mainPostInputDiv'>
           <div className='postInputDiv'>

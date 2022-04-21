@@ -11,6 +11,80 @@ export default function GroupListingPage() {
   const [relevantUsers, setRelevantUsers] = useState();
   const [isAnAdmin, setIsAnAdmin] = useState(false);
 
+  function unblockFromGroup(username) {
+    let relevantInfo = {
+      relevantUser: username,
+      groupName: window.location.pathname.split('/')[2],
+    };
+
+    fetch(`/api/unblockUserFromGroup`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(relevantInfo),
+    }).then(async (data) => {
+      let result = await data.json();
+      
+      fetch(`/api/getGroupMembers/` + window.location.pathname.split('/')[2], {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then(async (data) => {
+        let relevantInfo = await data.json();
+        for (let user of relevantInfo) {
+          if (
+            (user['moderatorLevel'] == 'owner' ||
+              user['moderatorLevel'] == 'admin' ||
+              user['moderatorLevel'] == 'moderator') &&
+            user['relevantUsername'] == document.cookie.split('=')[1]
+          ) {
+            setIsAnAdmin(true);
+          }
+        }
+        setRelevantUsers(relevantInfo);
+      });
+    });
+  }
+
+  function blockFromGroup(username) {
+    let relevantInfo = {
+      relevantUser: username,
+      groupName: window.location.pathname.split('/')[2],
+    };
+
+    fetch(`/api/blockUserFromGroup`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(relevantInfo),
+    }).then(async (data) => {
+      let result = await data.json();
+
+      fetch(`/api/getGroupMembers/` + window.location.pathname.split('/')[2], {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then(async (data) => {
+        let relevantInfo = await data.json();
+        for (let user of relevantInfo) {
+          if (
+            (user['moderatorLevel'] == 'owner' ||
+              user['moderatorLevel'] == 'admin' ||
+              user['moderatorLevel'] == 'moderator') &&
+            user['relevantUsername'] == document.cookie.split('=')[1]
+          ) {
+            setIsAnAdmin(true);
+          }
+        }
+        setRelevantUsers(relevantInfo);
+      });
+    });
+  }
+
   function removeFromGroup(username) {
     let relevantInfo = {
       relevantUser: username,
@@ -50,7 +124,8 @@ export default function GroupListingPage() {
         for (let user of relevantInfo) {
           if (
             (user['moderatorLevel'] == 'owner' ||
-              user['moderatorLevel'] == 'admin') &&
+              user['moderatorLevel'] == 'admin' ||
+              user['moderatorLevel'] == 'moderator') &&
             user['relevantUsername'] == document.cookie.split('=')[1]
           ) {
             setIsAnAdmin(true);
@@ -88,12 +163,32 @@ export default function GroupListingPage() {
         {relevantUsers &&
           relevantUsers.map((item) => (
             <div className='userGridInProfile' key={item.relevantUsername}>
+              {isAnAdmin &&
+                item.blocked == 0 &&
+                item.relevantUsername != document.cookie.split('=')[1] && (
+                  <button
+                    onClick={() => blockFromGroup(item.relevantUsername)}
+                    className='blockUserButton'
+                  >
+                    Block Users Content
+                  </button>
+                )}
+              {isAnAdmin &&
+                item.blocked == 1 &&
+                item.relevantUsername != document.cookie.split('=')[1] && (
+                  <button
+                    onClick={() => unblockFromGroup(item.relevantUsername)}
+                    className='blockUserButton'
+                  >
+                    Unblock Users Content
+                  </button>
+                )}
               <div className='SpaceBlock' />
               {isAnAdmin &&
                 item.relevantUsername != document.cookie.split('=')[1] && (
                   <button
                     onClick={() => removeFromGroup(item.relevantUsername)}
-                    className='removeUserFromGroup'
+                    className='removeUserFromGroupButton'
                   >
                     Remove From Group
                   </button>
