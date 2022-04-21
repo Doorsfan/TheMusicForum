@@ -291,6 +291,28 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     }
   });
 
+  app.put('/api/demoteUser', (req, res) => {
+    try {
+      let relevantGroupId = db.prepare(
+        `SELECT * FROM userGroup WHERE name = '${req.body.groupName}'`
+      );
+      let wantedId = relevantGroupId.all()[0]['id'];
+
+      let relevantUser = db.prepare(
+        `SELECT * FROM users WHERE username = '${req.body.relevantUser}'`
+      );
+      let userId = relevantUser.all()[0]['id'];
+
+      let relevantUpdate = db.prepare(
+        `UPDATE groupMember SET moderatorLevel = 'user' WHERE userId = '${userId}' AND belongsToGroup = '${wantedId}'`
+      );
+      let relevantResult = relevantUpdate.run();
+      res.json('Demoted to user');
+    } catch (e) {
+      res.json('Something went wrong.');
+    }
+  });
+
   app.put('/api/unblockUserFromGroup', (req, res) => {
     try {
       let relevantGroupId = db.prepare(
