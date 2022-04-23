@@ -45,14 +45,13 @@ export default function ProfilePage() {
             let relevantInfo = await data.json();
             setUserName(relevantInfo.username);
           });
-          fetch(`/api/getGroupsIAmPartOf`, {
+          fetch(`/api/getGroupsIAmPartOf/` + document.cookie.split('=')[1], {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
             },
           }).then(async (data) => {
             let relevantInfo = await data.json();
-
             setUserGroups(relevantInfo);
           });
         }

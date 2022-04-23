@@ -1,6 +1,7 @@
 const passwordEncryptor = require('./passwordEncryptor');
 const acl = require('./acl');
 const specialRestRoutes = require('./special-rest-routes.js');
+const { mutateExecOptions } = require('nodemon/lib/config/load');
 const userTable = 'customers';
 
 let db;
@@ -190,46 +191,52 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.post('/api/createNewThread', (req, res) => {
     try {
-      let relevantGroup = db.prepare(
-        `SELECT * FROM userGroup WHERE name = '${req.body.groupName}'`
-      );
-      let groupResult = relevantGroup.all();
+      if (req.session?.user) {
+        let relevantGroup = db.prepare(
+          `SELECT * FROM userGroup WHERE name = '${req.body.groupName}'`
+        );
+        let groupResult = relevantGroup.all();
 
-      let myStatement = db.prepare(
-        `INSERT INTO thread (id, groupId, title, postedBy) VALUES (NULL, '${groupResult[0]['id']}', '${req.body.title}', '${req.body.postedBy}')`
-      );
-      let result = myStatement.run();
-      res.json('Made a new thread');
+        let myStatement = db.prepare(
+          `INSERT INTO thread (id, groupId, title, postedBy) VALUES (NULL, '${groupResult[0]['id']}', '${req.body.title}', '${req.body.postedBy}')`
+        );
+        let result = myStatement.run();
+        res.json('Made a new thread');
+      } else {
+        throw 'You need to be logged in when making threads.';
+      }
     } catch (e) {
-      res.json('Failed to make a new thread');
+      res.json('You need to be logged in when making threads.');
     }
   });
 
   app.post('/api/createNewGroup', (req, res) => {
     try {
-      let myStatement = db.prepare(
-        `INSERT INTO userGroup (id, description, name) VALUES (NULL,'${req.body.description}' , '${req.body.name}')`
-      );
-      let result = myStatement.run();
+      if (req.session?.user) {
+        let myStatement = db.prepare(
+          `INSERT INTO userGroup (id, description, name) VALUES (NULL,'${req.body.description}' , '${req.body.name}')`
+        );
+        let result = myStatement.run();
 
-      let myGroup = db.prepare(
-        `SELECT * FROM userGroup WHERE name = '${req.body.name}'`
-      );
-      let myGroupResult = myGroup.run();
+        let myGroup = db.prepare(
+          `SELECT * FROM userGroup WHERE name = '${req.body.name}'`
+        );
+        let myGroupResult = myGroup.run();
 
-      let groupOwner = db.prepare(
-        `SELECT * FROM users WHERE username = '${req.body.groupOwner}'`
-      );
-      let groupOwnerResult = groupOwner.all();
+        let groupOwner = db.prepare(
+          `SELECT * FROM users WHERE username = '${req.body.groupOwner}'`
+        );
+        let groupOwnerResult = groupOwner.all();
 
-      let createMyGroupMember = db.prepare(
-        `INSERT INTO groupMember (userId, belongsToGroup, moderatorLevel) VALUES ('${groupOwnerResult[0]['id']}', '${myGroupResult['lastInsertRowid']}', 'owner')`
-      );
-      let createGroupMemberResult = createMyGroupMember.run();
+        let createMyGroupMember = db.prepare(
+          `INSERT INTO groupMember (userId, belongsToGroup, moderatorLevel) VALUES ('${groupOwnerResult[0]['id']}', '${myGroupResult['lastInsertRowid']}', 'owner')`
+        );
+        let createGroupMemberResult = createMyGroupMember.run();
 
-      res.json(
-        'Successfully made a new group with the name of: ' + req.body.name
-      );
+        res.json(
+          'Successfully made a new group with the name of: ' + req.body.name
+        );
+      }
     } catch (e) {
       res.json('Failed to create the group.');
     }
@@ -237,6 +244,9 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.post('/api/createInvite', (req, res) => {
     try {
+      if (req.session?.user == undefined) {
+        throw 'Have to be logged in for that.';
+      }
       let targetUser = db.prepare(
         `SELECT * FROM users WHERE username = '${req.body.targetUser}'`
       );
@@ -280,13 +290,19 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         res.json('That User does not exist.');
       }
     } catch (e) {
-      console.log(e);
-      res.json('Failed to create invite');
+      if (e == 'Have to be logged in for that.') {
+        res.json('Have to be logged in to invite other users to groups.');
+      } else {
+        res.json('Failed to create invite');
+      }
     }
   });
 
   app.post('/api/createNewPost/:threadName', (req, res) => {
     try {
+      if (req.session?.user == undefined) {
+        throw 'Have to be logged in for that.';
+      }
       let relevantUser = db.prepare(
         `SELECT * FROM users WHERE username = '${req.body.postedByUsername}'`
       );
@@ -308,12 +324,19 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       let allThreadsResult = allPostsForThread.all();
       res.json(allThreadsResult);
     } catch (e) {
-      res.json(e);
+      if (e == 'Have to be logged in for that.') {
+        res.json('Have to be logged in to create new posts to threads.');
+      } else {
+        res.json(e);
+      }
     }
   });
 
   app.get('/api/getThreadsForGroup/:name', (req, res) => {
     try {
+      if (req.session?.user == undefined) {
+        throw 'Have to be logged in for that.';
+      }
       let relevantGroup = db.prepare(
         `SELECT * FROM userGroup WHERE name = '${req.params.name}'`
       );
@@ -325,12 +348,19 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       let theThreads = relevantThreads.all();
       res.json(theThreads);
     } catch (e) {
-      res.json('Found no threads');
+      if (e == 'Have to be logged in for that.') {
+        res.json('Have to be logged in to see threads belonging to a group.');
+      } else {
+        res.json('Found no threads');
+      }
     }
   });
 
   app.get('/api/getPostsForGroup/:name', (req, res) => {
     try {
+      if (req.session?.user == undefined) {
+        throw 'Have to be logged in for that.';
+      }
       let relevantThreads = db.prepare(
         `SELECT * FROM thread WHERE title = '${req.params['name']}'`
       );
@@ -342,12 +372,34 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       let myPosts = posts.all();
       res.json(myPosts);
     } catch (e) {
-      res.json('Failed to find any threads.');
+      if (e == 'Have to be logged in for that.') {
+        res.json('Have to be logged in to get posts for a group.');
+      } else {
+        res.json('Failed to find any posts for that thread');
+      }
     }
   });
 
   app.put('/api/promoteUser', (req, res) => {
     try {
+      if (req.session?.user == undefined) {
+        throw 'Have to be logged in for that.';
+      }
+
+      let personWantingToPromote = db.prepare(
+        `SELECT * FROM users WHERE userId = '${req.body.personTryingToPromote}'`
+      );
+      let promoteResult = personWantingToPromote.all()[0]['id'];
+
+      let checkIfModerator = db.prepare(
+        `SELECT * FROM groupMember WHERE userId = '${promoteResult}'`
+      );
+      let moderatorResult = checkIfModerator.all();
+      if (moderatorResult.length == 0) {
+        throw 'No moderator found to promote from.';
+      } else if (moderatorResult[0]['moderatorLevel'] == 'user') {
+        throw 'No moderator found to promote from.';
+      }
       let relevantGroupId = db.prepare(
         `SELECT * FROM userGroup WHERE name = '${req.body.groupName}'`
       );
@@ -364,7 +416,12 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       let relevantResult = relevantUpdate.run();
       res.json('Promoted to Moderator');
     } catch (e) {
-      res.json('Something went wrong');
+      console.log(e);
+      if (e == 'Have to be logged in for that.') {
+        res.json('Have to be logged in to promote people.');
+      } else {
+        res.json('Something went wrong.');
+      }
     }
   });
 
@@ -535,31 +592,41 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     }
   });
 
-  app.get('/api/getGroupsIAmPartOf', (req, res) => {
+  app.get('/api/getGroupsIAmPartOf/:username', (req, res) => {
     let groupsIAmPartOf = [];
     try {
-      if (req.session.user) {
-        let relevantGroups = db.prepare(
-          `SELECT * FROM groupMember WHERE userId = '${req.session.user.id}'`
-        );
-        let allGroups = relevantGroups.all();
-        let groupIDs = [];
-        for (let i = 0; i < allGroups.length; i++) {
-          groupIDs.push(allGroups[i]['belongsToGroup']);
-        }
-
-        for (let e = 0; e < groupIDs.length; e++) {
-          let groupIAmOfResult = db.prepare(
-            `SELECT * FROM userGroup WHERE id = '${groupIDs[e]}'`
-          );
-          let groupIAmOfQueriedResult = groupIAmOfResult.all();
-          groupsIAmPartOf.push(groupIAmOfQueriedResult[0]['name']);
-        }
-
-        res.json(groupsIAmPartOf);
+      if (req.session?.user == undefined) {
+        throw 'Have to be logged in for that.';
       }
+      let relevantUser = db.prepare(
+        `SELECT * FROM users WHERE username = '${req.params.username}'`
+      );
+      let foundUserId = relevantUser.all()[0]['id'];
+
+      let relevantGroups = db.prepare(
+        `SELECT * FROM groupMember WHERE userId = '${foundUserId}'`
+      );
+      let allGroups = relevantGroups.all();
+      let groupIDs = [];
+      for (let i = 0; i < allGroups.length; i++) {
+        groupIDs.push(allGroups[i]['belongsToGroup']);
+      }
+
+      for (let e = 0; e < groupIDs.length; e++) {
+        let groupIAmOfResult = db.prepare(
+          `SELECT * FROM userGroup WHERE id = '${groupIDs[e]}'`
+        );
+        let groupIAmOfQueriedResult = groupIAmOfResult.all();
+        groupsIAmPartOf.push(groupIAmOfQueriedResult[0]['name']);
+      }
+
+      res.json(groupsIAmPartOf);
     } catch (e) {
-      res.json('Failed to find any groups.');
+      if (e == 'Have to be logged in for that.') {
+        res.json('Have to be logged in to see what groups you are part of.');
+      } else {
+        res.json('Something went wrong.');
+      }
     }
   });
 

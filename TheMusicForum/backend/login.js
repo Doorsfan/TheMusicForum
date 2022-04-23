@@ -11,7 +11,7 @@ module.exports = function (app, db) {
       saveUninitialized: true,
       cookie: {
         secure: 'auto',
-        maxAge: 10 * 60 * 60 * 24 * 1000,
+        maxAge: 10 * 60,
       },
       store: store({ dbPath: './database/musicforum.db' }),
     })
@@ -81,7 +81,10 @@ module.exports = function (app, db) {
     delete result.lastChangedPassword;
     if (!result._error) {
       req.session.user = result;
-      res.cookie('loggedInUsername', result.username);
+      res.cookie('loggedInUsername', result.username, {
+        secure: 'auto',
+        maxAge: 10 * 60 * 60 * 24 * 1000,
+      });
     }
     res.json(result);
   });

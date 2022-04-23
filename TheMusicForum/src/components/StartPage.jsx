@@ -100,7 +100,7 @@ export default function StartPage() {
       setThreads(await Thread.find());
       setUserGroups(await UserGroup.find());
       if (!joinedNewGroup) {
-        fetch(`api/getGroupsIAmPartOf`, {
+        fetch(`api/getGroupsIAmPartOf/` + document.cookie.split('=')[1], {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

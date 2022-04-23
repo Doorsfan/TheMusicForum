@@ -60,6 +60,7 @@ export default function GroupListingPage() {
 
   function promoteUser(username) {
     let relevantInfo = {
+      personTryingToPromote: document.cookie.split('=')[1],
       relevantUser: username,
       groupName: window.location.pathname.split('/')[2],
     };
