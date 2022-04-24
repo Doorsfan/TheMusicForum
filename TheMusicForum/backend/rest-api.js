@@ -416,7 +416,6 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       let relevantResult = relevantUpdate.run();
       res.json('Promoted to Moderator');
     } catch (e) {
-      console.log(e);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to promote people.');
       } else {
@@ -427,6 +426,9 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.put('/api/demoteUser', (req, res) => {
     try {
+      if (req.session?.user == undefined) {
+        throw 'Have to be logged in for that.';
+      }
       let relevantGroupId = db.prepare(
         `SELECT * FROM userGroup WHERE name = '${req.body.groupName}'`
       );
@@ -443,12 +445,19 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       let relevantResult = relevantUpdate.run();
       res.json('Demoted to user');
     } catch (e) {
-      res.json('Something went wrong.');
+      if (e == 'Have to be logged in for that.') {
+        res.json('Have to be logged in to demote people.');
+      } else {
+        res.json('Something went wrong.');
+      }
     }
   });
 
   app.put('/api/unblockUserFromGroup', (req, res) => {
     try {
+      if (req.session?.user == undefined) {
+        throw 'Have to be logged in for that.';
+      }
       let relevantGroupId = db.prepare(
         `SELECT * FROM userGroup WHERE name = '${req.body.groupName}'`
       );
@@ -465,12 +474,19 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       let relevantResult = relevantUpdate.run();
       res.json('Unblocked user');
     } catch (e) {
-      res.json('Something went wrong.');
+      if (e == 'Have to be logged in for that.') {
+        res.json('Have to be logged in to unblock people.');
+      } else {
+        res.json('Something went wrong.');
+      }
     }
   });
 
   app.put('/api/blockUserFromGroup', (req, res) => {
     try {
+      if (req.session?.user == undefined) {
+        throw 'Have to be logged in for that.';
+      }
       let relevantGroupId = db.prepare(
         `SELECT * FROM userGroup WHERE name = '${req.body.groupName}'`
       );
@@ -487,12 +503,19 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       let relevantResult = relevantUpdate.run();
       res.json('Blocked user');
     } catch (e) {
-      res.json('Something went wrong.');
+      if (e == 'Have to be logged in for that.') {
+        res.json('Have to be logged in to block people.');
+      } else {
+        res.json('Something went wrong.');
+      }
     }
   });
 
   app.get('/api/canIPostInThisGroup/:groupName/:username', (req, res) => {
     try {
+      if (req.session?.user == undefined) {
+        throw 'Have to be logged in for that.';
+      }
       let relevantGroup = db.prepare(
         `SELECT * FROM userGroup WHERE name = '${req.params['groupName']}'`
       );
@@ -510,13 +533,19 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       let allowPosting = canPostRequest.all()[0]['blocked'] == 1 ? false : true;
       res.json(allowPosting);
     } catch (e) {
-      console.log(e);
-      res.json(true);
+      if (e == 'Have to be logged in for that.') {
+        res.json('Have to be logged in to block people.');
+      } else {
+        res.json(true);
+      }
     }
   });
 
   app.get('/api/canIPostInThisThread/:title/:username', (req, res) => {
     try {
+      if (req.session?.user == undefined) {
+        throw 'Have to be logged in for that.';
+      }
       let relevantThread = db.prepare(
         `SELECT * FROM thread WHERE title = '${req.params['title']}'`
       );
@@ -535,13 +564,19 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
       res.json(allowPosting);
     } catch (e) {
-      console.log(e);
-      res.json(true);
+      if (e == 'Have to be logged in for that.') {
+        res.json('Have to be logged in to perform that action.');
+      } else {
+        res.json(true);
+      }
     }
   });
 
   app.delete('/api/removeUserFromGroup/:name', (req, res) => {
     try {
+      if (req.session?.user == undefined) {
+        throw 'Have to be logged in for that.';
+      }
       let relevantGroup = db.prepare(
         `SELECT * FROM userGroup WHERE name = '${req.params.name}'`
       );
@@ -558,13 +593,19 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
       res.json(result);
     } catch (e) {
-      console.log(e);
-      res.json('Something went wrong.');
+      if (e == 'Have to be logged in for that.') {
+        res.json('Cannot do that without being logged in.');
+      } else {
+        res.json('Something went wrong');
+      }
     }
   });
 
   app.get('/api/getGroupMembers/:name', (req, res) => {
     try {
+      if (req.session?.user == undefined) {
+        throw 'Have to be logged in for that.';
+      }
       let relevantGroup = db.prepare(
         `SELECT * FROM userGroup WHERE name = '${req.params['name']}'`
       );
@@ -588,7 +629,11 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
       res.json(groupMembers);
     } catch (e) {
-      res.json('None in the group.');
+      if (e == 'Have to be logged in for that.') {
+        res.json('Cannot do that without being logged in.');
+      } else {
+        res.json('Something went wrong');
+      }
     }
   });
 
@@ -632,6 +677,9 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.post('/api/joinGroup', (req, res) => {
     try {
+      if (req.session?.user == undefined) {
+        throw 'Have to be logged in for that.';
+      }
       let relevantGroup = db.prepare(
         `SELECT * FROM userGroup WHERE name = '${req.body.name}'`
       );
@@ -649,36 +697,62 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
       res.json('Successfully joined a group.');
     } catch (e) {
-      res.json('Failed to join a group.');
+      if (e == 'Have to be logged in for that.') {
+        res.json('Have to be logged in for that action.');
+      } else {
+        res.json('Something went wrong.');
+      }
     }
   });
 
   app.get('/api/getUserInfo/:username', (req, res) => {
-    runMyQuery(
-      req,
-      res,
-      req.params,
-      `
+    try {
+      if (req.session?.user == undefined) {
+        throw 'Have to be logged in for that.';
+      }
+      runMyQuery(
+        req,
+        res,
+        req.params,
+        `
         SELECT blocked, profileImage, username
         FROM users
         WHERE username = :username
         `,
-      true
-    );
+        true
+      );
+    } catch (e) {
+      if (e == 'Have to be logged in for that.') {
+        res.json('Have to be logged in for that action.');
+      } else {
+        res.json('Something went wrong.');
+      }
+    }
   });
 
   app.get('/api/whoAmI/:username', (req, res) => {
-    runMyQuery(
-      req,
-      res,
-      req.params,
-      `
+    try {
+      if (req.session?.user == undefined) {
+        throw 'Have to be logged in for that.';
+      }
+      runMyQuery(
+        req,
+        res,
+        req.params,
+        `
         SELECT role
         FROM users
         WHERE username = :username
       `,
-      true
-    );
+        true
+      );
+    } catch (e) {
+      if (e == 'Have to be logged in for that.') {
+        res.json('Have to be logged in for that action.');
+      } else {
+        res.json('Something went wrong.');
+      }
+    }
   });
 
   app.get('/api/getSession', (req, res) => {
