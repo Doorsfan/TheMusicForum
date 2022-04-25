@@ -55,20 +55,16 @@ export default function LoginPage() {
   };
 
   async function registerUser(credentials) {
-    if (handleSubmit()) {
-      return fetch('/api/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      }).then(async (data) => {
-        let myUser = await data.json();
-        window.location.pathname = '/';
-      });
-    } else {
-      alert('Please fill out your credentials first');
-    }
+    return fetch('/api/registerNewUser', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+    }).then(async (data) => {
+      let myUser = await data.json();
+      window.location.pathname = '/';
+    });
   }
 
   return (

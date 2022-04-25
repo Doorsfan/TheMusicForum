@@ -66,7 +66,7 @@ export default function GroupPage() {
         setThreads(foundThreads);
       });
 
-      fetch(`/api/getGroupsIAmPartOf`, {
+      fetch(`/api/getGroupsIAmPartOf/` + document.cookie.split('=')[1], {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

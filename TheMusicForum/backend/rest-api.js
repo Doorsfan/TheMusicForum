@@ -97,101 +97,19 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     res.json(tablesAndViews);
   });
 
-  for (let { name, type } of tablesAndViews) {
-    app.get('/api/' + name, (req, res) => {
-      runQuery(
-        name,
-        req,
-        res,
-        {},
-        `
-        SELECT *
-        FROM '${name}'
-      `
-      );
-    });
-
-    app.get('/api/' + name + '/:id', (req, res) => {
-      runQuery(
-        name,
-        req,
-        res,
-        req.params,
-        `
-        SELECT *
-        FROM '${name}'
-        WHERE id = :id
-      `,
-        true
-      );
-    });
-
-    if (type === 'view') {
-      continue;
+  app.get('/api/getAllGroups', (req, res) => {
+    try {
+      let relevantGroup = db.prepare(`SELECT * FROM userGroup`);
+      let groupResult = relevantGroup.all();
+      res.json(groupResult);
+    } catch (e) {
+      res.json('Something went wrong.');
     }
-
-    app.post('/api/' + name, (req, res) => {
-      delete req.body.id;
-
-      if (name === userTable) {
-        req.body.userRole = 'user';
-        req.body.password = passwordEncryptor(req.body.password);
-      }
-
-      if (req.body.password) {
-        req.body.password = passwordEncryptor(req.body.password);
-      }
-
-      runQuery(
-        name,
-        req,
-        res,
-        req.body,
-        `
-        INSERT INTO '${name}' (${Object.keys(req.body)})
-        VALUES (${Object.keys(req.body).map((x) => ':' + x)})
-      `
-      );
-    });
-
-    let putAndPatch = (req, res) => {
-      if (name === userTable && req.body.password) {
-        req.body.password = passwordEncryptor(req.body.password);
-      }
-
-      runQuery(
-        name,
-        req,
-        res,
-        { ...req.body, ...req.params },
-        `
-        UPDATE '${name}'
-        SET ${Object.keys(req.body).map((x) => x + ' = :' + x)}
-        WHERE id = :id
-      `
-      );
-    };
-
-    app.put('/api/' + name + '/:id', putAndPatch);
-    app.patch('/api/' + name + '/:id', putAndPatch);
-
-    app.delete('/api/' + name + '/:id', (req, res) => {
-      runQuery(
-        name,
-        req,
-        res,
-        req.params,
-        `
-        DELETE FROM '${name}'
-        WHERE id = :id
-      `
-      );
-    });
-  }
+  });
 
   app.post('/api/createNewThread', (req, res) => {
     try {
-      if (req.session?.user) {
+      if (!seeIfIAmLoggedIn()) {
         let relevantGroup = db.prepare(
           `SELECT * FROM userGroup WHERE name = '${req.body.groupName}'`
         );
@@ -212,7 +130,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.post('/api/createNewGroup', (req, res) => {
     try {
-      if (req.session?.user) {
+      if (!seeIfIAmLoggedIn()) {
         let myStatement = db.prepare(
           `INSERT INTO userGroup (id, description, name) VALUES (NULL,'${req.body.description}' , '${req.body.name}')`
         );
@@ -244,7 +162,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.post('/api/createInvite', (req, res) => {
     try {
-      if (req.session?.user == undefined) {
+      if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
       let targetUser = db.prepare(
@@ -298,9 +216,19 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     }
   });
 
+  function seeIfIAmLoggedIn() {
+    let seeIfLoggedIn = db.prepare(`SELECT * FROM activeSession`);
+    let result = seeIfLoggedIn.all();
+    if (result.length > 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   app.post('/api/createNewPost/:threadName', (req, res) => {
     try {
-      if (req.session?.user == undefined) {
+      if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
       let relevantUser = db.prepare(
@@ -334,7 +262,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.get('/api/getThreadsForGroup/:name', (req, res) => {
     try {
-      if (req.session?.user == undefined) {
+      if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
       let relevantGroup = db.prepare(
@@ -358,7 +286,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.get('/api/getPostsForGroup/:name', (req, res) => {
     try {
-      if (req.session?.user == undefined) {
+      if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
       let relevantThreads = db.prepare(
@@ -382,7 +310,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.put('/api/promoteUser', (req, res) => {
     try {
-      if (req.session?.user == undefined) {
+      if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
 
@@ -426,7 +354,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.put('/api/demoteUser', (req, res) => {
     try {
-      if (req.session?.user == undefined) {
+      if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
       let relevantGroupId = db.prepare(
@@ -455,7 +383,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.put('/api/unblockUserFromGroup', (req, res) => {
     try {
-      if (req.session?.user == undefined) {
+      if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
       let relevantGroupId = db.prepare(
@@ -484,7 +412,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.put('/api/blockUserFromGroup', (req, res) => {
     try {
-      if (req.session?.user == undefined) {
+      if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
       let relevantGroupId = db.prepare(
@@ -513,7 +441,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.get('/api/canIPostInThisGroup/:groupName/:username', (req, res) => {
     try {
-      if (req.session?.user == undefined) {
+      if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
       let relevantGroup = db.prepare(
@@ -543,7 +471,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.get('/api/canIPostInThisThread/:title/:username', (req, res) => {
     try {
-      if (req.session?.user == undefined) {
+      if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
       let relevantThread = db.prepare(
@@ -572,9 +500,25 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     }
   });
 
+  app.post('/api/registerNewUser', (req, res) => {
+    try {
+      let newUser = db.prepare(`
+      INSERT INTO users (id, role, blocked, profileimage, username, password, lastChangedPassword) VALUES (NULL, 'user', 0, '${
+        req.body.profileimage
+      }', '${req.body.username}', '${passwordEncryptor(
+        req.body.password
+      )}', '${Date.now()}')
+    `);
+      newUser.run();
+      res.json('Made a new user.');
+    } catch (e) {
+      res.json('Something went wrong');
+    }
+  });
+
   app.delete('/api/removeUserFromGroup/:name', (req, res) => {
     try {
-      if (req.session?.user == undefined) {
+      if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
       let relevantGroup = db.prepare(
@@ -603,7 +547,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.get('/api/getGroupMembers/:name', (req, res) => {
     try {
-      if (req.session?.user == undefined) {
+      if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
       let relevantGroup = db.prepare(
@@ -640,7 +584,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
   app.get('/api/getGroupsIAmPartOf/:username', (req, res) => {
     let groupsIAmPartOf = [];
     try {
-      if (req.session?.user == undefined) {
+      if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
       let relevantUser = db.prepare(
@@ -677,7 +621,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.post('/api/joinGroup', (req, res) => {
     try {
-      if (req.session?.user == undefined) {
+      if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
       let relevantGroup = db.prepare(
@@ -707,7 +651,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.get('/api/getUserInfo/:username', (req, res) => {
     try {
-      if (req.session?.user == undefined) {
+      if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
       runMyQuery(
@@ -732,7 +676,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.get('/api/whoAmI/:username', (req, res) => {
     try {
-      if (req.session?.user == undefined) {
+      if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
       runMyQuery(
@@ -753,18 +697,6 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         res.json('Something went wrong.');
       }
     }
-  });
-
-  app.get('/api/getSession', (req, res) => {
-    runMyQuery(
-      req,
-      res,
-      req.params,
-      `
-        SELECT * FROM sessions
-        `,
-      true
-    );
   });
 
   specialRestRoutes(app, runQuery, db);

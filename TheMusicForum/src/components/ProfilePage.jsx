@@ -18,46 +18,23 @@ export default function ProfilePage() {
 
   useEffect(() => {
     (async () => {
-      fetch('/api/getSession', {
+      fetch(`/api/getUserInfo/${document.cookie.split('=')[1]}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       }).then(async (data) => {
-        let response = await data.json();
-
-        if (response?.session) {
-          fetch(`/api/whoAmI/${document.cookie.split('=')[1]}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }).then(async (data) => {
-            let myUserRole = await data.json();
-            setUserRole(myUserRole.role);
-          });
-          fetch(`/api/getUserInfo/${document.cookie.split('=')[1]}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }).then(async (data) => {
-            let relevantInfo = await data.json();
-            setUserName(relevantInfo.username);
-          });
-          fetch(`/api/getGroupsIAmPartOf/` + document.cookie.split('=')[1], {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }).then(async (data) => {
-            let relevantInfo = await data.json();
-            setUserGroups(relevantInfo);
-          });
-        }
-        /*else {
-          window.location = '/';
-        }*/
+        let relevantInfo = await data.json();
+        setUserName(relevantInfo.username);
+      });
+      fetch(`/api/getGroupsIAmPartOf/` + document.cookie.split('=')[1], {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then(async (data) => {
+        let relevantInfo = await data.json();
+        setUserGroups(relevantInfo);
       });
     })();
   }, []);
