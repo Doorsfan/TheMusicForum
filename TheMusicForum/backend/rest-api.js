@@ -49,7 +49,7 @@ function runQuery(
 ) {
   /*
   if (!acl(tableName, req)) {
-    res.status(405);
+    res.status(403);
     res.json({ _error: 'Not allowed!' });
     return;
   } */
@@ -90,7 +90,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.get('/api/tablesAndViews', (req, res) => {
     if (!acl('tablesAndViews', req)) {
-      res.status(405);
+      res.status(403);
       res.json({ _error: 'Not allowed!' });
       return;
     }
@@ -101,6 +101,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     try {
       let relevantGroup = db.prepare(`SELECT * FROM userGroup`);
       let groupResult = relevantGroup.all();
+      res.status(200);
       res.json(groupResult);
     } catch (e) {
       res.json('Something went wrong.');
@@ -119,11 +120,13 @@ module.exports = function setupRESTapi(app, databaseConnection) {
           `INSERT INTO thread (id, groupId, title, postedBy) VALUES (NULL, '${groupResult[0]['id']}', '${req.body.title}', '${req.body.postedBy}')`
         );
         let result = myStatement.run();
+        res.status(200);
         res.json('Made a new thread');
       } else {
         throw 'You need to be logged in when making threads.';
       }
     } catch (e) {
+      res.status(403);
       res.json('You need to be logged in when making threads.');
     }
   });
@@ -150,12 +153,13 @@ module.exports = function setupRESTapi(app, databaseConnection) {
           `INSERT INTO groupMember (userId, belongsToGroup, moderatorLevel) VALUES ('${groupOwnerResult[0]['id']}', '${myGroupResult['lastInsertRowid']}', 'owner')`
         );
         let createGroupMemberResult = createMyGroupMember.run();
-
+        res.status(200);
         res.json(
           'Successfully made a new group with the name of: ' + req.body.name
         );
       }
     } catch (e) {
+      res.status(403);
       res.json('Failed to create the group.');
     }
   });
@@ -200,14 +204,16 @@ module.exports = function setupRESTapi(app, databaseConnection) {
               `INSERT INTO invitation (id, fromUserId, toUserId, groupId) VALUES (NULL,'${sentFromId}','${targetId}', '${groupId}')`
             );
             let result = myStatement.run();
-
+            res.status(200);
             res.json('Invite sent.');
           }
         }
       } else {
+        res.status(404);
         res.json('That User does not exist.');
       }
     } catch (e) {
+      res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to invite other users to groups.');
       } else {
@@ -250,8 +256,10 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `SELECT * FROM post WHERE threadId = '${threadResult}'`
       );
       let allThreadsResult = allPostsForThread.all();
+      res.status(200);
       res.json(allThreadsResult);
     } catch (e) {
+      res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to create new posts to threads.');
       } else {
@@ -274,8 +282,10 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `SELECT * FROM thread WHERE groupId = '${relevantId}'`
       );
       let theThreads = relevantThreads.all();
+      res.status(200);
       res.json(theThreads);
     } catch (e) {
+      res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to see threads belonging to a group.');
       } else {
@@ -298,8 +308,10 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `SELECT * FROM post WHERE threadid = '${threadsResult[0]['id']}'`
       );
       let myPosts = posts.all();
+      res.status(200);
       res.json(myPosts);
     } catch (e) {
+      res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to get posts for a group.');
       } else {
@@ -342,8 +354,10 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `UPDATE groupMember SET moderatorLevel = 'moderator' WHERE userId = '${userId}' AND belongsToGroup = '${wantedId}'`
       );
       let relevantResult = relevantUpdate.run();
+      res.status(200);
       res.json('Promoted to Moderator');
     } catch (e) {
+      res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to promote people.');
       } else {
@@ -371,8 +385,10 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `UPDATE groupMember SET moderatorLevel = 'user' WHERE userId = '${userId}' AND belongsToGroup = '${wantedId}'`
       );
       let relevantResult = relevantUpdate.run();
+      res.status(200);
       res.json('Demoted to user');
     } catch (e) {
+      res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to demote people.');
       } else {
@@ -400,8 +416,10 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `UPDATE groupMember SET blocked = 0 WHERE userId = '${userId}' AND belongsToGroup = '${wantedId}'`
       );
       let relevantResult = relevantUpdate.run();
+      res.status(200);
       res.json('Unblocked user');
     } catch (e) {
+      res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to unblock people.');
       } else {
@@ -429,8 +447,10 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `UPDATE groupMember SET blocked = 1 WHERE userId = '${userId}' AND belongsToGroup = '${wantedId}'`
       );
       let relevantResult = relevantUpdate.run();
+      res.status(200);
       res.json('Blocked user');
     } catch (e) {
+      res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to block people.');
       } else {
@@ -459,8 +479,10 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       );
 
       let allowPosting = canPostRequest.all()[0]['blocked'] == 1 ? false : true;
+      res.status(200);
       res.json(allowPosting);
     } catch (e) {
+      res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to block people.');
       } else {
@@ -489,9 +511,10 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       );
 
       let allowPosting = canPostRequest.all()[0]['blocked'] == 1 ? false : true;
-
+      res.status(200);
       res.json(allowPosting);
     } catch (e) {
+      res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to perform that action.');
       } else {
@@ -510,8 +533,10 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       )}', '${Date.now()}')
     `);
       newUser.run();
+      res.status(200);
       res.json('Made a new user.');
     } catch (e) {
+      res.status(403);
       res.json('Something went wrong');
     }
   });
@@ -534,9 +559,10 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `DELETE FROM groupMember WHERE belongsToGroup = '${groupId}' AND userId = '${userId}'`
       );
       let result = removeUserFromGroup.run();
-
+      res.status(200);
       res.json(result);
     } catch (e) {
+      res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Cannot do that without being logged in.');
       } else {
@@ -570,9 +596,10 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         delete info.userId;
         return info;
       });
-
+      res.status(200);
       res.json(groupMembers);
     } catch (e) {
+      res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Cannot do that without being logged in.');
       } else {
@@ -608,9 +635,10 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         let groupIAmOfQueriedResult = groupIAmOfResult.all();
         groupsIAmPartOf.push(groupIAmOfQueriedResult[0]['name']);
       }
-
+      res.status(200);
       res.json(groupsIAmPartOf);
     } catch (e) {
+      res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to see what groups you are part of.');
       } else {
@@ -624,6 +652,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
+      res.status(200);
       let relevantGroup = db.prepare(
         `SELECT * FROM userGroup WHERE name = '${req.body.name}'`
       );
@@ -641,6 +670,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
       res.json('Successfully joined a group.');
     } catch (e) {
+      res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in for that action.');
       } else {
@@ -654,6 +684,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       if (!seeIfIAmLoggedIn()) {
         throw 'Have to be logged in for that.';
       }
+      res.status(200);
       runMyQuery(
         req,
         res,
@@ -666,6 +697,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         true
       );
     } catch (e) {
+      res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in for that action.');
       } else {
@@ -691,6 +723,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         true
       );
     } catch (e) {
+      res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in for that action.');
       } else {
