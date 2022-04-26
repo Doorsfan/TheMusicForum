@@ -112,7 +112,7 @@ export default function StartPage() {
         setUserGroups(result);
       });
 
-      if (!joinedNewGroup) {
+      if (!joinedNewGroup && document.cookie) {
         fetch(`api/getGroupsIAmPartOf/` + document.cookie.split('=')[1], {
           method: 'GET',
           headers: {
