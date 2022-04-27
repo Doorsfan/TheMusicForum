@@ -27,11 +27,15 @@ export default function StartPage() {
   let navigate = useNavigate();
 
   function logout() {
-    fetch(`api/logout`, {
+    let loggedInUser = {
+      username: document.cookie.split('=')[1],
+    };
+    fetch(`/api/logout`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify(loggedInUser),
     }).then(async (data) => {
       let loggedout = await data.json();
       setLoggedIn(false);
@@ -97,10 +101,19 @@ export default function StartPage() {
       } else {
         setLoggedIn(false);
       }
-      setThreads(await Thread.find());
-      setUserGroups(await UserGroup.find());
-      if (!joinedNewGroup) {
-        fetch(`api/getGroupsIAmPartOf`, {
+
+      fetch(`api/getAllGroups/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then(async (data) => {
+        let result = await data.json();
+        setUserGroups(result);
+      });
+
+      if (!joinedNewGroup && document.cookie) {
+        fetch(`api/getGroupsIAmPartOf/` + document.cookie.split('=')[1], {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

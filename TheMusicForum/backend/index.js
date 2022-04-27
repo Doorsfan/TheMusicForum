@@ -7,6 +7,11 @@ const express = require('express');
 
 const app = express();
 
+app.use((req, res, next) => {
+  res.removeHeader('X-Powered-By');
+  next();
+});
+
 app.use(express.static(path.join(__dirname, '../dist')));
 
 app.use(express.json({ limit: '100MB' }));

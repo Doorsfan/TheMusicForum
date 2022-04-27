@@ -54,7 +54,10 @@ export default function GroupPage() {
         navigate('/');
       }
       fetch(
-        `/api/getThreadsForGroup/` + window.location.pathname.split('/')[2],
+        `/api/getThreadsForGroup/` +
+          window.location.pathname.split('/')[2] +
+          `/` +
+          document.cookie.split('=')[1],
         {
           method: 'GET',
           headers: {
@@ -66,7 +69,7 @@ export default function GroupPage() {
         setThreads(foundThreads);
       });
 
-      fetch(`/api/getGroupsIAmPartOf`, {
+      fetch(`/api/getGroupsIAmPartOf/` + document.cookie.split('=')[1], {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
