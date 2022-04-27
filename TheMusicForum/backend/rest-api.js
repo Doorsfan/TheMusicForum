@@ -720,7 +720,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       if (!seeIfIAmLoggedIn(req.body.groupJoiner)) {
         throw 'Have to be logged in for that.';
       }
-      res.status(200);
+      
       let relevantGroup = db.prepare(
         `SELECT * FROM userGroup WHERE name = '${req.body.name}'`
       );
@@ -735,7 +735,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `INSERT INTO groupMember (userId, belongsToGroup, moderatorLevel) VALUES ('${groupJoinerResult[0].id}','${relevantGroupResult[0].id}','user')`
       );
       let result = myStatement.run();
-
+      res.status(200);
       res.json('Successfully joined a group.');
     } catch (e) {
       res.status(403);
