@@ -110,7 +110,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.post('/api/createNewThread', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.body.postedBy)) {
         let relevantGroup = db.prepare(
           `SELECT * FROM userGroup WHERE name = '${req.body.groupName}'`
         );
@@ -133,7 +133,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.post('/api/createNewGroup', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.body.groupOwner)) {
         let myStatement = db.prepare(
           `INSERT INTO userGroup (id, description, name) VALUES (NULL,'${req.body.description}' , '${req.body.name}')`
         );
@@ -166,7 +166,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.post('/api/createInvite', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.body.fromUser)) {
         throw 'Have to be logged in for that.';
       }
       let targetUser = db.prepare(
@@ -222,9 +222,16 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     }
   });
 
-  function seeIfIAmLoggedIn() {
-    let seeIfLoggedIn = db.prepare(`SELECT * FROM activeSession`);
-    let result = seeIfLoggedIn.all();
+  function seeIfIAmLoggedIn(wantedUsername) {
+    let activeUser = db.prepare(
+      `SELECT * FROM users WHERE username = '${wantedUsername}'`
+    );
+    let relevantId = activeUser.all()[0]['id'];
+
+    let sessionQuery = db.prepare(
+      `SELECT * FROM activeSession WHERE userId = '${relevantId}'`
+    );
+    let result = sessionQuery.all();
     if (result.length > 0) {
       return true;
     } else {
@@ -234,7 +241,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.post('/api/createNewPost/:threadName', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.body.postedByUsername)) {
         throw 'Have to be logged in for that.';
       }
       let relevantUser = db.prepare(
@@ -268,13 +275,13 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     }
   });
 
-  app.get('/api/getThreadsForGroup/:name', (req, res) => {
+  app.get('/api/getThreadsForGroup/:name/:askedBy', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.params['askedBy'])) {
         throw 'Have to be logged in for that.';
       }
       let relevantGroup = db.prepare(
-        `SELECT * FROM userGroup WHERE name = '${req.params.name}'`
+        `SELECT * FROM userGroup WHERE name = '${req.params['name']}'`
       );
       let relevantId = relevantGroup.all()[0]['id'];
 
@@ -294,9 +301,9 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     }
   });
 
-  app.get('/api/getPostsForGroup/:name', (req, res) => {
+  app.get('/api/getPostsForGroup/:name/:askedBy', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.params['askedBy'])) {
         throw 'Have to be logged in for that.';
       }
       let relevantThreads = db.prepare(
@@ -322,12 +329,12 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.put('/api/promoteUser', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.body.personTryingToPromote)) {
         throw 'Have to be logged in for that.';
       }
 
       let personWantingToPromote = db.prepare(
-        `SELECT * FROM users WHERE userId = '${req.body.personTryingToPromote}'`
+        `SELECT * FROM users WHERE username = '${req.body.personTryingToPromote}'`
       );
       let promoteResult = personWantingToPromote.all()[0]['id'];
 
@@ -361,15 +368,29 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to promote people.');
       } else {
-        res.json('Something went wrong.');
+        res.json('Insufficient rights to do that.');
       }
     }
   });
 
   app.put('/api/demoteUser', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.body.personTryingToDemote)) {
         throw 'Have to be logged in for that.';
+      }
+      let personWantingToDemote = db.prepare(
+        `SELECT * FROM users WHERE username = '${req.body.personTryingToDemote}'`
+      );
+      let demoteResult = personWantingToDemote.all()[0]['id'];
+
+      let checkIfModerator = db.prepare(
+        `SELECT * FROM groupMember WHERE userId = '${demoteResult}'`
+      );
+      let moderatorResult = checkIfModerator.all();
+      if (moderatorResult.length == 0) {
+        throw 'No moderator found to demote from.';
+      } else if (moderatorResult[0]['moderatorLevel'] == 'user') {
+        throw 'No moderator found to demote from.';
       }
       let relevantGroupId = db.prepare(
         `SELECT * FROM userGroup WHERE name = '${req.body.groupName}'`
@@ -392,16 +413,31 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to demote people.');
       } else {
-        res.json('Something went wrong.');
+        res.json('Insufficient rights to demote.');
       }
     }
   });
 
   app.put('/api/unblockUserFromGroup', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.body.personTryingToUnblock)) {
         throw 'Have to be logged in for that.';
       }
+      let personWantingToUnblock = db.prepare(
+        `SELECT * FROM users WHERE username = '${req.body.personTryingToUnblock}'`
+      );
+      let unblockResult = personWantingToUnblock.all()[0]['id'];
+
+      let checkIfModerator = db.prepare(
+        `SELECT * FROM groupMember WHERE userId = '${unblockResult}'`
+      );
+      let moderatorResult = checkIfModerator.all();
+      if (moderatorResult.length == 0) {
+        throw 'No moderator found to unblock from.';
+      } else if (moderatorResult[0]['moderatorLevel'] == 'user') {
+        throw 'No moderator found to unblock from.';
+      }
+
       let relevantGroupId = db.prepare(
         `SELECT * FROM userGroup WHERE name = '${req.body.groupName}'`
       );
@@ -423,16 +459,32 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to unblock people.');
       } else {
-        res.json('Something went wrong.');
+        res.json('Insufficient rights to unblock.');
       }
     }
   });
 
   app.put('/api/blockUserFromGroup', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.body.personTryingToBlock)) {
         throw 'Have to be logged in for that.';
       }
+
+      let personWantingToBlock = db.prepare(
+        `SELECT * FROM users WHERE username = '${req.body.personTryingToBlock}'`
+      );
+      let blockResult = personWantingToBlock.all()[0]['id'];
+
+      let checkIfModerator = db.prepare(
+        `SELECT * FROM groupMember WHERE userId = '${blockResult}'`
+      );
+      let moderatorResult = checkIfModerator.all();
+      if (moderatorResult.length == 0) {
+        throw 'No moderator found to block from.';
+      } else if (moderatorResult[0]['moderatorLevel'] == 'user') {
+        throw 'No moderator found to block from.';
+      }
+
       let relevantGroupId = db.prepare(
         `SELECT * FROM userGroup WHERE name = '${req.body.groupName}'`
       );
@@ -454,14 +506,14 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to block people.');
       } else {
-        res.json('Something went wrong.');
+        res.json('Insufficient rights to block a person.');
       }
     }
   });
 
   app.get('/api/canIPostInThisGroup/:groupName/:username', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.params['username'])) {
         throw 'Have to be logged in for that.';
       }
       let relevantGroup = db.prepare(
@@ -493,7 +545,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.get('/api/canIPostInThisThread/:title/:username', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.params['username'])) {
         throw 'Have to be logged in for that.';
       }
       let relevantThread = db.prepare(
@@ -543,11 +595,27 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.delete('/api/removeUserFromGroup/:name', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.body.personTryingToRemove)) {
         throw 'Have to be logged in for that.';
       }
+
+      let personWantingToRemove = db.prepare(
+        `SELECT * FROM users WHERE username = '${req.body.personTryingToRemove}'`
+      );
+      let removeResult = personWantingToRemove.all()[0]['id'];
+
+      let checkIfModerator = db.prepare(
+        `SELECT * FROM groupMember WHERE userId = '${removeResult}'`
+      );
+      let moderatorResult = checkIfModerator.all();
+      if (moderatorResult.length == 0) {
+        throw 'No moderator found to remove from.';
+      } else if (moderatorResult[0]['moderatorLevel'] == 'user') {
+        throw 'No moderator found to remove from.';
+      }
+
       let relevantGroup = db.prepare(
-        `SELECT * FROM userGroup WHERE name = '${req.params.name}'`
+        `SELECT * FROM userGroup WHERE name = '${req.params['name']}'`
       );
       let groupId = relevantGroup.all()[0]['id'];
 
@@ -566,14 +634,14 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       if (e == 'Have to be logged in for that.') {
         res.json('Cannot do that without being logged in.');
       } else {
-        res.json('Something went wrong');
+        res.json('Insufficient rights to remove a person');
       }
     }
   });
 
   app.get('/api/getGroupMembers/:name', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.params['name'])) {
         throw 'Have to be logged in for that.';
       }
       let relevantGroup = db.prepare(
@@ -611,11 +679,11 @@ module.exports = function setupRESTapi(app, databaseConnection) {
   app.get('/api/getGroupsIAmPartOf/:username', (req, res) => {
     let groupsIAmPartOf = [];
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.params['username'])) {
         throw 'Have to be logged in for that.';
       }
       let relevantUser = db.prepare(
-        `SELECT * FROM users WHERE username = '${req.params.username}'`
+        `SELECT * FROM users WHERE username = '${req.params['username']}'`
       );
       let foundUserId = relevantUser.all()[0]['id'];
 
@@ -649,7 +717,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.post('/api/joinGroup', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.body.groupJoiner)) {
         throw 'Have to be logged in for that.';
       }
       res.status(200);
@@ -681,7 +749,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.get('/api/getUserInfo/:username', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.params['username'])) {
         throw 'Have to be logged in for that.';
       }
       res.status(200);
@@ -708,7 +776,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.get('/api/whoAmI/:username', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn()) {
+      if (!seeIfIAmLoggedIn(req.params['username'])) {
         throw 'Have to be logged in for that.';
       }
       runMyQuery(

@@ -22,6 +22,7 @@ export default function GroupListingPage() {
     let relevantInfo = {
       relevantUser: username,
       groupName: window.location.pathname.split('/')[2],
+      personTryingToUnblock: document.cookie.split('=')[1],
     };
 
     fetch(`/api/unblockUserFromGroup`, {
@@ -103,6 +104,7 @@ export default function GroupListingPage() {
     let relevantInfo = {
       relevantUser: username,
       groupName: window.location.pathname.split('/')[2],
+      personTryingToDemote: document.cookie.split('=')[1],
     };
 
     fetch(`/api/demoteUser`, {
@@ -160,6 +162,7 @@ export default function GroupListingPage() {
     let relevantInfo = {
       relevantUser: username,
       groupName: window.location.pathname.split('/')[2],
+      personTryingToBlock: document.cookie.split('=')[1],
     };
 
     fetch(`/api/blockUserFromGroup`, {
@@ -200,6 +203,7 @@ export default function GroupListingPage() {
     let relevantInfo = {
       relevantUser: username,
       groupName: window.location.pathname.split('/')[2],
+      personTryingToRemove: document.cookie.split('=')[1],
     };
     fetch(
       `/api/removeUserFromGroup/` + window.location.pathname.split('/')[2],

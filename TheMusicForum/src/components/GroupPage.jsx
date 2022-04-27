@@ -54,7 +54,10 @@ export default function GroupPage() {
         navigate('/');
       }
       fetch(
-        `/api/getThreadsForGroup/` + window.location.pathname.split('/')[2],
+        `/api/getThreadsForGroup/` +
+          window.location.pathname.split('/')[2] +
+          `/` +
+          document.cookie.split('=')[1],
         {
           method: 'GET',
           headers: {

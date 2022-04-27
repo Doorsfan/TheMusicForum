@@ -53,12 +53,18 @@ export default function ThreadPage() {
         setAllowPosting(result);
       });
 
-      fetch(`/api/getPostsForGroup/` + window.location.pathname.split('/')[2], {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }).then(async (data) => {
+      fetch(
+        `/api/getPostsForGroup/` +
+          window.location.pathname.split('/')[2] +
+          `/` +
+          document.cookie.split('=')[1],
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      ).then(async (data) => {
         let foundThreads = await data.json();
         setPosts(foundThreads);
       });
