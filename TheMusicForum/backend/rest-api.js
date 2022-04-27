@@ -720,7 +720,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       if (!seeIfIAmLoggedIn(req.body.groupJoiner)) {
         throw 'Have to be logged in for that.';
       }
-      
+
       let relevantGroup = db.prepare(
         `SELECT * FROM userGroup WHERE name = '${req.body.name}'`
       );
