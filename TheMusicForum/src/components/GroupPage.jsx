@@ -48,7 +48,7 @@ export default function GroupPage() {
   // Run this when our component mounts (we can see it on screen)
   useEffect(() => {
     (async () => {
-      if (document.cookie) {
+      if (await getLoggedInUser()) {
         setLoggedIn(true);
       } else {
         navigate('/');
@@ -57,7 +57,7 @@ export default function GroupPage() {
         `/api/getThreadsForGroup/` +
           window.location.pathname.split('/')[2] +
           `/` +
-          document.cookie.split('=')[1],
+          (await getLoggedInUser())?.username,
         {
           method: 'GET',
           headers: {
@@ -69,7 +69,7 @@ export default function GroupPage() {
         setThreads(foundThreads);
       });
 
-      fetch(`/api/getGroupsIAmPartOf/` + document.cookie.split('=')[1], {
+      fetch(`/api/getGroupsIAmPartOf/` + loggedInUsername, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -85,7 +85,7 @@ export default function GroupPage() {
 
       fetch(
         `/api/canIPostInThisGroup/${window.location.pathname.split('/')[2]}/${
-          document.cookie.split('=')[1]
+          (await getLoggedInUser())?.username
         }`,
         {
           method: 'GET',
@@ -122,7 +122,7 @@ export default function GroupPage() {
         )}
         {loggedIn && (
           <div className='profileText'>
-            <Link className='profileLink' to={`/Profile/${document.cookie}`}>
+            <Link className='profileLink' to={`/Profile/${loggedInUsername}`}>
               My Profile
             </Link>
           </div>

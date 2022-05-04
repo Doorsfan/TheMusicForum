@@ -11,44 +11,26 @@ module.exports = function (app, db) {
       saveUninitialized: true,
       cookie: {
         secure: 'auto',
-        maxAge: 10 * 60 * 100,
+        maxAge: 2 * 60 * 60 * 1000,
       },
       store: store({ dbPath: './database/musicforum.db' }),
     })
   );
 
-  app.delete('/api/logout', (req, res) => {
-    let activeSessions = db.prepare(`SELECT * FROM activeSession`);
-    let currentActiveSessions = activeSessions.all();
-    try {
-      if (currentActiveSessions.length > 0) {
-        let userIdQuery = db.prepare(
-          `SELECT id FROM users WHERE username = '${req.body.username}'`
-        );
-        let userId = userIdQuery.all();
-
-        let checkSession = db.prepare(
-          `SELECT * FROM activeSession WHERE userId = '${userId['id']}'`
-        );
-        let sessionResult = checkSession.all();
-
-        if (sessionResult.length == 0) {
-          throw 'Something went wrong.';
-        }
-        let removeUserSession = db.prepare(
-          `DELETE FROM activeSession WHERE userId = '${userId['id']}'`
-        );
-        removeUserSession.run();
-
-        res.clearCookie('loggedInUsername');
-        res.json('Logged out.');
-      } else {
-        res.json('Something went wrong.');
-      }
-    } catch (e) {
-      res.json('Something went wrong');
-    }
+  app.get('/api/whoAmI', (req, res) => {
+    console.log('In the backend, the req.session.user was: ', req.session.user);
+    res.json(req.session.user ? true : false);
   });
+
+  app.get('/api/login', (req, res) => {
+    res.json(req.session.user || null);
+  });
+
+  app.delete('/api/logout', (req, res) => {
+    delete req.session.user;
+    res.json('Logged out');
+  })
+
 
   app.post('/api/login', (req, res) => {
     if (!acl('login', req)) {
@@ -107,15 +89,17 @@ module.exports = function (app, db) {
     `);
     insertIntoSession.run();
 
+    //encrypt text in the cookie text
     delete result.password;
     delete result.lastChangedPassword;
     if (!result._error) {
       req.session.user = result;
       res.cookie('loggedInUsername', result.username, {
         secure: 'auto',
-        maxAge: 10 * 60 * 60 * 24 * 1000,
+        maxAge: 2 * 60 * 60 * 1000,
       });
     }
+    console.log(req.session.user);
     res.json(result);
   });
 };

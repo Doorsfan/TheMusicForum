@@ -22,7 +22,7 @@ export default function GroupListingPage() {
     let relevantInfo = {
       relevantUser: username,
       groupName: window.location.pathname.split('/')[2],
-      personTryingToUnblock: document.cookie.split('=')[1],
+      personTryingToUnblock: loggedInUsername,
     };
 
     fetch(`/api/unblockUserFromGroup`, {
@@ -46,7 +46,7 @@ export default function GroupListingPage() {
             (user['moderatorLevel'] == 'owner' ||
               user['moderatorLevel'] == 'admin' ||
               user['moderatorLevel'] == 'moderator') &&
-            user['relevantUsername'] == document.cookie.split('=')[1]
+            user['relevantUsername'] == (await getLoggedInUser())?.username
           ) {
             setIsAnAdmin(true);
           }
@@ -61,7 +61,7 @@ export default function GroupListingPage() {
 
   function promoteUser(username) {
     let relevantInfo = {
-      personTryingToPromote: document.cookie.split('=')[1],
+      personTryingToPromote: loggedInUsername,
       relevantUser: username,
       groupName: window.location.pathname.split('/')[2],
     };
@@ -87,7 +87,7 @@ export default function GroupListingPage() {
             (user['moderatorLevel'] == 'owner' ||
               user['moderatorLevel'] == 'admin' ||
               user['moderatorLevel'] == 'moderator') &&
-            user['relevantUsername'] == document.cookie.split('=')[1]
+            user['relevantUsername'] == (await getLoggedInUser())?.username
           ) {
             setIsAnAdmin(true);
           }
@@ -104,7 +104,7 @@ export default function GroupListingPage() {
     let relevantInfo = {
       relevantUser: username,
       groupName: window.location.pathname.split('/')[2],
-      personTryingToDemote: document.cookie.split('=')[1],
+      personTryingToDemote: loggedInUsername,
     };
 
     fetch(`/api/demoteUser`, {
@@ -128,7 +128,7 @@ export default function GroupListingPage() {
             (user['moderatorLevel'] == 'owner' ||
               user['moderatorLevel'] == 'admin' ||
               user['moderatorLevel'] == 'moderator') &&
-            user['relevantUsername'] == document.cookie.split('=')[1]
+            user['relevantUsername'] == (await getLoggedInUser())?.username
           ) {
             setIsAnAdmin(true);
           }
@@ -144,7 +144,7 @@ export default function GroupListingPage() {
   function invitePerson() {
     let relevantInfo = {
       targetUser: personToInvite,
-      fromUser: document.cookie.split('=')[1],
+      fromUser: loggedInUsername,
       groupName: window.location.pathname.split('/')[2],
     };
     fetch('/api/createInvite', {
@@ -162,7 +162,7 @@ export default function GroupListingPage() {
     let relevantInfo = {
       relevantUser: username,
       groupName: window.location.pathname.split('/')[2],
-      personTryingToBlock: document.cookie.split('=')[1],
+      personTryingToBlock: loggedInUsername,
     };
 
     fetch(`/api/blockUserFromGroup`, {
@@ -186,7 +186,7 @@ export default function GroupListingPage() {
             (user['moderatorLevel'] == 'owner' ||
               user['moderatorLevel'] == 'admin' ||
               user['moderatorLevel'] == 'moderator') &&
-            user['relevantUsername'] == document.cookie.split('=')[1]
+            user['relevantUsername'] == (await getLoggedInUser())?.username
           ) {
             setIsAnAdmin(true);
           }
@@ -203,7 +203,7 @@ export default function GroupListingPage() {
     let relevantInfo = {
       relevantUser: username,
       groupName: window.location.pathname.split('/')[2],
-      personTryingToRemove: document.cookie.split('=')[1],
+      personTryingToRemove: loggedInUsername,
     };
     fetch(
       `/api/removeUserFromGroup/` + window.location.pathname.split('/')[2],
@@ -227,8 +227,18 @@ export default function GroupListingPage() {
     });
   }
 
+  const [moderatorLevel, setModeratorLevel] = useState(null);
+
   useEffect(() => {
     (async () => {
+      setModeratorLevel(
+        await (
+          await fetch(
+            '/api/whatUserroleAmI/' + window.location.pathname.split('/')[2]
+          )
+        ).json()
+      );
+
       fetch(`/api/getGroupMembers/` + window.location.pathname.split('/')[2], {
         method: 'GET',
         headers: {
@@ -236,12 +246,14 @@ export default function GroupListingPage() {
         },
       }).then(async (data) => {
         let relevantInfo = await data.json();
+        console.log('The relevant info in GroupListing page: ', relevantInfo);
+
         for (let user of relevantInfo) {
           if (
             (user['moderatorLevel'] == 'owner' ||
               user['moderatorLevel'] == 'admin' ||
               user['moderatorLevel'] == 'moderator') &&
-            user['relevantUsername'] == document.cookie.split('=')[1]
+            user['relevantUsername'] == (await getLoggedInUser())?.username
           ) {
             setIsAnAdmin(true);
           }
@@ -279,11 +291,12 @@ export default function GroupListingPage() {
           <div className='SpaceBlock' />
         </div>
         {relevantUsers &&
-          relevantUsers.map((item) => (
+          relevantUsers.map(async (item) => (
             <div className='userGridInProfile' key={item.relevantUsername}>
               {isAnAdmin &&
                 item.blocked == 0 &&
-                item.relevantUsername != document.cookie.split('=')[1] && (
+                item.relevantUsername !=
+                  (await getLoggedInUser())?.username && (
                   <button
                     onClick={() => blockFromGroup(item.relevantUsername)}
                     className='blockUserButton'
@@ -293,7 +306,8 @@ export default function GroupListingPage() {
                 )}
               {isAnAdmin &&
                 item.blocked == 1 &&
-                item.relevantUsername != document.cookie.split('=')[1] && (
+                item.relevantUsername !=
+                  (await getLoggedInUser())?.username && (
                   <button
                     onClick={() => unblockFromGroup(item.relevantUsername)}
                     className='blockUserButton'
@@ -303,7 +317,8 @@ export default function GroupListingPage() {
                 )}
               <div className='SpaceBlock' />
               {isAnAdmin &&
-                item.relevantUsername != document.cookie.split('=')[1] && (
+                item.relevantUsername !=
+                  (await getLoggedInUser())?.username && (
                   <button
                     onClick={() => removeFromGroup(item.relevantUsername)}
                     className='removeUserFromGroupButton'
@@ -312,10 +327,11 @@ export default function GroupListingPage() {
                   </button>
                 )}
               {!isAnAdmin &&
-                item.relevantUsername != document.cookie.split('=')[1] && (
+                item.relevantUsername !=
+                  (await getLoggedInUser())?.username && (
                   <div className='SpaceBlock' />
                 )}
-              {item.relevantUsername == document.cookie.split('=')[1] && (
+              {item.relevantUsername == (await getLoggedInUser())?.username && (
                 <button
                   onClick={() => removeFromGroup(item.relevantUsername)}
                   className='removeUserFromGroup'
@@ -339,14 +355,20 @@ export default function GroupListingPage() {
                   Demote User
                 </button>
               )}
-              {item.moderatorLevel == 'user' && isAnOwner && (
-                <button
-                  onClick={() => promoteUser(item.relevantUsername)}
-                  className='promoteUserButton'
-                >
-                  Promote User
-                </button>
-              )}
+              {
+                /*moderatorLevel !== 'user'*/ [
+                  'owner',
+                  'admin',
+                  'moderator',
+                ].includes(moderatorLevel) && (
+                  <button
+                    onClick={() => promoteUser(item.relevantUsername)}
+                    className='promoteUserButton'
+                  >
+                    Promote User
+                  </button>
+                )
+              }
               {item.moderatorLevel == 'user' && <div className='SpaceBlock' />}
               <div className='SpaceBlock' />
             </div>

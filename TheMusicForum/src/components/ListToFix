@@ -1,0 +1,11 @@
+/*
+/api/createNewThread - API fetch on Backend to Req User
+/api/unblockUserFromGroup
+/api/removeUserFromGroup/ + window.location.pathname.split('/')[2]
+
+Remove loggedInUser cookie and replace backend value with req.session.user
+Remove any inclusion of username in req body
+Rewrite prepared statement, separate parameters and provide parameters on run and all methods
+Frontend should working/functional
+
+*/

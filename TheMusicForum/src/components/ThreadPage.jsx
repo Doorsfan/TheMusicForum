@@ -17,7 +17,7 @@ export default function ThreadPage() {
     let myResponse = {
       content: responseContent,
       blocked: 0,
-      postedByUsername: document.cookie.split('=')[1],
+      postedByUsername: loggedInUsername,
     };
 
     fetch('/api/createNewPost/' + window.location.pathname.split('/')[2], {
@@ -40,7 +40,7 @@ export default function ThreadPage() {
     (async () => {
       fetch(
         `/api/canIPostInThisThread/${window.location.pathname.split('/')[2]}/${
-          document.cookie.split('=')[1]
+          (await getLoggedInUser())?.username
         }`,
         {
           method: 'GET',
@@ -57,7 +57,7 @@ export default function ThreadPage() {
         `/api/getPostsForGroup/` +
           window.location.pathname.split('/')[2] +
           `/` +
-          document.cookie.split('=')[1],
+          (await getLoggedInUser())?.username,
         {
           method: 'GET',
           headers: {

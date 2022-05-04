@@ -19,8 +19,7 @@ export default function CreateNewGroupPage() {
 
     let newGroup = {
       description: description,
-      name: name,
-      groupOwner: document.cookie.split('=')[1],
+      name: name
     };
 
     fetch('/api/createNewGroup', {

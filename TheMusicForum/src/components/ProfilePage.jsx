@@ -18,7 +18,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     (async () => {
-      fetch(`/api/getUserInfo/${document.cookie.split('=')[1]}`, {
+      fetch(`/api/getUserInfo/${(await getLoggedInUser())?.username}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -27,7 +27,7 @@ export default function ProfilePage() {
         let relevantInfo = await data.json();
         setUserName(relevantInfo.username);
       });
-      fetch(`/api/getGroupsIAmPartOf/` + document.cookie.split('=')[1], {
+      fetch(`/api/getGroupsIAmPartOf/` + (await getLoggedInUser())?.username, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

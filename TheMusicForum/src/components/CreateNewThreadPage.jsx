@@ -14,7 +14,7 @@ export default function CreateNewThreadPage() {
 
   useEffect(() => {
     (async () => {
-      if (!document.cookie) {
+      if (!(await getLoggedInUser())) {
         navigate('/');
       }
     })();
@@ -25,7 +25,7 @@ export default function CreateNewThreadPage() {
 
     let threadInfo = {
       title: threadTitle,
-      postedBy: document.cookie.split('=')[1],
+      postedBy: loggedInUsername,
       groupName: window.location.pathname.split('/')[2],
       originalThreadPost: originalThreadPost,
     };

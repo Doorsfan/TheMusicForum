@@ -1,3 +1,7 @@
+window.getLoggedInUser = async () => {
+  return await (await fetch('/api/login')).json();
+}
+
 import { useState, useEffect } from 'react';
 
 // a subclass to FetchHelper
