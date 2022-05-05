@@ -14,7 +14,8 @@ export default function CreateNewThreadPage() {
 
   useEffect(() => {
     (async () => {
-      if (!document.cookie) {
+      let result = await (await fetch('/api/login')).json();
+      if (!result) {
         navigate('/');
       }
     })();
@@ -25,7 +26,6 @@ export default function CreateNewThreadPage() {
 
     let threadInfo = {
       title: threadTitle,
-      postedBy: document.cookie.split('=')[1],
       groupName: window.location.pathname.split('/')[2],
       originalThreadPost: originalThreadPost,
     };
@@ -38,7 +38,6 @@ export default function CreateNewThreadPage() {
       body: JSON.stringify(threadInfo),
     }).then(async (data) => {
       let myThread = await data.json();
-      window.location.pathname = '/';
     });
   };
 

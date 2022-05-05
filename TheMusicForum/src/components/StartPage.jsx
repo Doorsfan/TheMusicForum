@@ -23,33 +23,50 @@ export default function StartPage() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [alreadyPartOfGroups, setAlreadyPartOfGroups] = useState([]);
   const [joinedNewGroup, setJoinedNewGroup] = useState(false);
+  const [loggedInUsername, setLoggedInUsername] = useState('');
 
   let navigate = useNavigate();
 
   function logout() {
-    let loggedInUser = {
-      username: document.cookie.split('=')[1],
-    };
     fetch(`/api/logout`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(loggedInUser),
     }).then(async (data) => {
       let loggedout = await data.json();
       setLoggedIn(false);
     });
   }
 
-  function leaveGroup(groupName) {
-    console.log('temp');
+  function leaveGroup(name) {
+    let relevantInfo = {
+      name: window.location.pathname.split('/')[2],
+    };
+
+    fetch(`/api/leaveGroup/` + name, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(relevantInfo),
+    }).then(async (data) => {
+      let response = await data.json();
+    });
+
+    fetch(`api/getGroupsIAmPartOf`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }).then(async (data) => {
+      setAlreadyPartOfGroups(await data.json());
+    });
   }
 
-  function joinGroup(groupName, userName) {
+  function joinGroup(groupName) {
     let groupInfo = {
       name: groupName,
-      groupJoiner: document.cookie.split('=')[1],
     };
     fetch(`api/joinGroup`, {
       method: 'POST',
@@ -58,9 +75,16 @@ export default function StartPage() {
       },
       body: JSON.stringify(groupInfo),
     }).then(async (data) => {
-      let loggedout = await data.json();
-      setLoggedIn(false);
-      setJoinedNewGroup(false);
+      setJoinedNewGroup(true);
+    });
+
+    fetch(`api/getGroupsIAmPartOf`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }).then(async (data) => {
+      setAlreadyPartOfGroups(await data.json());
     });
   }
 
@@ -72,7 +96,7 @@ export default function StartPage() {
           foundName = true;
           return (
             <button
-              onClick={() => leaveGroup(name, document.cookie)}
+              onClick={() => leaveGroup(name)}
               className='joinGroupButton'
             >
               Leave Group
@@ -83,7 +107,7 @@ export default function StartPage() {
       if (!foundName) {
         return (
           <button
-            onClick={() => joinGroup(name, document.cookie)}
+            onClick={async () => joinGroup(name)}
             className='joinGroupButton'
           >
             Join Group
@@ -96,12 +120,6 @@ export default function StartPage() {
   // Run this when our component mounts (we can see it on screen)
   useEffect(() => {
     (async () => {
-      if (document.cookie) {
-        setLoggedIn(true);
-      } else {
-        setLoggedIn(false);
-      }
-
       fetch(`api/getAllGroups/`, {
         method: 'GET',
         headers: {
@@ -111,16 +129,39 @@ export default function StartPage() {
         let result = await data.json();
         setUserGroups(result);
       });
+      let result = await (await fetch('/api/login')).json();
+      if (result) {
+        fetch(`/api/loggedInUsersUsername`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }).then(async (data) => {
+          let result = await data.json();
+          setLoggedInUsername(result);
+        });
 
-      if (!joinedNewGroup && document.cookie) {
-        fetch(`api/getGroupsIAmPartOf/` + document.cookie.split('=')[1], {
+        fetch(`/api/whoAmI`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }).then(async (data) => {
+          let relevantInfo = await data.json();
+          if (!relevantInfo) {
+            setLoggedIn(false);
+          } else {
+            setLoggedIn(true);
+          }
+        });
+
+        fetch(`api/getGroupsIAmPartOf`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
         }).then(async (data) => {
           setAlreadyPartOfGroups(await data.json());
-          setJoinedNewGroup(true);
         });
       }
     })();
@@ -148,7 +189,7 @@ export default function StartPage() {
         )}
         {loggedIn && (
           <div className='profileText'>
-            <Link className='profileLink' to={`/Profile/${document.cookie}`}>
+            <Link className='profileLink' to={`/Profile/${loggedInUsername}`}>
               My Profile
             </Link>
           </div>
@@ -157,16 +198,17 @@ export default function StartPage() {
       <main>
         <div className='GroupsTitle'>Groups</div>
         {userGroups.map(({ id, name, description }) => (
-          <div
-            className='group'
-            key={id}
-            onClick={() => {
-              if (loggedIn) {
-                navigate('./Threads/' + name);
-              }
-            }}
-          >
-            <h3 className='groupName'>{name}</h3>
+          <div className='group' key={id}>
+            <h3
+              className='groupName'
+              onClick={() => {
+                if (loggedIn) {
+                  navigate('./Threads/' + name);
+                }
+              }}
+            >
+              {name}
+            </h3>
             <div className='descriptionDiv'>{description}</div>
             {renderJoinButton(name)}
           </div>

@@ -155,7 +155,16 @@ main {
   margin-right: auto;
 }
 
-.invitePersonForm{
+.memberGrid {
+  display: grid;
+  grid-template-columns: auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: red;
+  width: 1000px;
+}
+
+.invitePersonForm {
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -163,7 +172,7 @@ main {
   margin-top: 10px;
 }
 
-.invitePersonButton{
+.invitePersonButton {
   display: block;
   width: max-content;
   margin-left: auto;

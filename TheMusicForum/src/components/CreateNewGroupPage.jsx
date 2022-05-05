@@ -20,7 +20,6 @@ export default function CreateNewGroupPage() {
     let newGroup = {
       description: description,
       name: name,
-      groupOwner: document.cookie.split('=')[1],
     };
 
     fetch('/api/createNewGroup', {
@@ -31,6 +30,7 @@ export default function CreateNewGroupPage() {
       body: JSON.stringify(newGroup),
     }).then(async (data) => {
       let myGroupResult = await data.json();
+
       if (myGroupResult != 'Failed to create the group.') {
         window.location = '/';
       }
