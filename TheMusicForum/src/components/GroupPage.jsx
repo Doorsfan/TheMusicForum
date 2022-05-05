@@ -21,6 +21,7 @@ export default function GroupPage() {
   const [threads, setThreads] = useState([]);
   const [loggedIn, setLoggedIn] = useState(false);
   const [canCreateThread, setCanCreateThread] = useState(false);
+  const [loggedInUsername, setLoggedInUsername] = useState('');
 
   let navigate = useNavigate();
 
@@ -48,16 +49,32 @@ export default function GroupPage() {
   // Run this when our component mounts (we can see it on screen)
   useEffect(() => {
     (async () => {
-      if (await getLoggedInUser()) {
-        setLoggedIn(true);
-      } else {
-        navigate('/');
-      }
+      fetch(`/api/whoAmI`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then(async (data) => {
+        let relevantInfo = await data.json();
+        if (!relevantInfo) {
+          navigate('/');
+        } else {
+          setLoggedIn(true);
+        }
+      });
+
+      fetch(`/api/loggedInUsersUsername`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then(async (data) => {
+        let result = await data.json();
+        setLoggedInUsername(result);
+      });
+
       fetch(
-        `/api/getThreadsForGroup/` +
-          window.location.pathname.split('/')[2] +
-          `/` +
-          (await getLoggedInUser())?.username,
+        `/api/getThreadsForGroup/` + window.location.pathname.split('/')[2],
         {
           method: 'GET',
           headers: {
@@ -69,7 +86,7 @@ export default function GroupPage() {
         setThreads(foundThreads);
       });
 
-      fetch(`/api/getGroupsIAmPartOf/` + loggedInUsername, {
+      fetch(`/api/getGroupsIAmPartOf`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -84,9 +101,7 @@ export default function GroupPage() {
       });
 
       fetch(
-        `/api/canIPostInThisGroup/${window.location.pathname.split('/')[2]}/${
-          (await getLoggedInUser())?.username
-        }`,
+        `/api/canIPostInThisGroup/${window.location.pathname.split('/')[2]}`,
         {
           method: 'GET',
           headers: {
@@ -96,6 +111,9 @@ export default function GroupPage() {
       ).then(async (data) => {
         let result = await data.json();
         setCanCreateThread(result);
+        if (!result) {
+          navigate('/');
+        }
       });
     })();
   }, []);

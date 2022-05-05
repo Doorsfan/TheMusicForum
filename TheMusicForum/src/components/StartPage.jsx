@@ -23,38 +23,16 @@ export default function StartPage() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [alreadyPartOfGroups, setAlreadyPartOfGroups] = useState([]);
   const [joinedNewGroup, setJoinedNewGroup] = useState(false);
-
-  function rerender() {
-    // Not pretty but works for now - har reload of page
-    location.reload();
-  }
+  const [loggedInUsername, setLoggedInUsername] = useState('');
 
   let navigate = useNavigate();
 
-  function checkIfIAmLoggedIn() {
-    let loggedIn = false;
-    fetch(`/api/whoAmI`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }).then(async (data) => {
-      let relevantInfo = await data.json();
-      loggedIn = relevantInfo;
-    });
-    return loggedIn;
-  }
-
   function logout() {
-    let loggedInUser = {
-      username: loggedInUsername,
-    };
     fetch(`/api/logout`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(loggedInUser),
     }).then(async (data) => {
       let loggedout = await data.json();
       setLoggedIn(false);
@@ -63,20 +41,10 @@ export default function StartPage() {
 
   function leaveGroup(name) {
     let relevantInfo = {
-      relevantUser: loggedInUsername,
       name: window.location.pathname.split('/')[2],
-      personTryingToRemove: loggedInUsername,
     };
-    fetch(`/api/whoAmI`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }).then(async (data) => {
-      let relevantInfo = await data.json();
-      console.log(relevantInfo);
-    });
-    fetch(`/api/removeUserFromGroup/` + name, {
+
+    fetch(`/api/leaveGroup/` + name, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -84,14 +52,21 @@ export default function StartPage() {
       body: JSON.stringify(relevantInfo),
     }).then(async (data) => {
       let response = await data.json();
-      rerender();
+    });
+
+    fetch(`api/getGroupsIAmPartOf`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }).then(async (data) => {
+      setAlreadyPartOfGroups(await data.json());
     });
   }
 
-  function joinGroup(groupName, userName) {
+  function joinGroup(groupName) {
     let groupInfo = {
       name: groupName,
-      groupJoiner: loggedInUsername,
     };
     fetch(`api/joinGroup`, {
       method: 'POST',
@@ -101,7 +76,15 @@ export default function StartPage() {
       body: JSON.stringify(groupInfo),
     }).then(async (data) => {
       setJoinedNewGroup(true);
-      rerender();
+    });
+
+    fetch(`api/getGroupsIAmPartOf`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }).then(async (data) => {
+      setAlreadyPartOfGroups(await data.json());
     });
   }
 
@@ -124,9 +107,7 @@ export default function StartPage() {
       if (!foundName) {
         return (
           <button
-            onClick={async () =>
-              joinGroup(name, (await getLoggedInUser())?.username)
-            }
+            onClick={async () => joinGroup(name)}
             className='joinGroupButton'
           >
             Join Group
@@ -136,28 +117,9 @@ export default function StartPage() {
     }
   };
 
-  const [loggedInUsername, setLoggedInUsername] = useState('');
-
   // Run this when our component mounts (we can see it on screen)
   useEffect(() => {
     (async () => {
-      setLoggedInUsername((await getLoggedInUser())?.username);
-
-      fetch(`/api/whoAmI`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }).then(async (data) => {
-        let relevantInfo = await data.json();
-        console.log('Session response from backend: ', relevantInfo);
-        if (!relevantInfo) {
-          setLoggedIn(false);
-        } else {
-          setLoggedIn(true);
-        }
-      });
-
       fetch(`api/getAllGroups/`, {
         method: 'GET',
         headers: {
@@ -167,16 +129,39 @@ export default function StartPage() {
         let result = await data.json();
         setUserGroups(result);
       });
+      let result = await (await fetch('/api/login')).json();
+      if (result) {
+        fetch(`/api/loggedInUsersUsername`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }).then(async (data) => {
+          let result = await data.json();
+          setLoggedInUsername(result);
+        });
 
-      if (!joinedNewGroup && (await getLoggedInUser())?.username) {
-        fetch(`api/getGroupsIAmPartOf/` + (await getLoggedInUser())?.username, {
+        fetch(`/api/whoAmI`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }).then(async (data) => {
+          let relevantInfo = await data.json();
+          if (!relevantInfo) {
+            setLoggedIn(false);
+          } else {
+            setLoggedIn(true);
+          }
+        });
+
+        fetch(`api/getGroupsIAmPartOf`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
         }).then(async (data) => {
           setAlreadyPartOfGroups(await data.json());
-          setJoinedNewGroup(true);
         });
       }
     })();
@@ -217,7 +202,7 @@ export default function StartPage() {
             <h3
               className='groupName'
               onClick={() => {
-                if (checkIfIAmLoggedIn()) {
+                if (loggedIn) {
                   navigate('./Threads/' + name);
                 }
               }}

@@ -17,7 +17,6 @@ export default function ThreadPage() {
     let myResponse = {
       content: responseContent,
       blocked: 0,
-      postedByUsername: loggedInUsername,
     };
 
     fetch('/api/createNewPost/' + window.location.pathname.split('/')[2], {
@@ -39,9 +38,7 @@ export default function ThreadPage() {
   useEffect(() => {
     (async () => {
       fetch(
-        `/api/canIPostInThisThread/${window.location.pathname.split('/')[2]}/${
-          (await getLoggedInUser())?.username
-        }`,
+        `/api/canIPostInThisThread/${window.location.pathname.split('/')[2]}`,
         {
           method: 'GET',
           headers: {
@@ -53,18 +50,12 @@ export default function ThreadPage() {
         setAllowPosting(result);
       });
 
-      fetch(
-        `/api/getPostsForGroup/` +
-          window.location.pathname.split('/')[2] +
-          `/` +
-          (await getLoggedInUser())?.username,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      ).then(async (data) => {
+      fetch(`/api/getPostsForGroup/` + window.location.pathname.split('/')[2], {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then(async (data) => {
         let foundThreads = await data.json();
         setPosts(foundThreads);
       });

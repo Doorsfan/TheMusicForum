@@ -18,7 +18,6 @@ module.exports = function (app, db) {
   );
 
   app.get('/api/whoAmI', (req, res) => {
-    console.log('In the backend, the req.session.user was: ', req.session.user);
     res.json(req.session.user ? true : false);
   });
 
@@ -29,8 +28,7 @@ module.exports = function (app, db) {
   app.delete('/api/logout', (req, res) => {
     delete req.session.user;
     res.json('Logged out');
-  })
-
+  });
 
   app.post('/api/login', (req, res) => {
     if (!acl('login', req)) {
@@ -94,12 +92,7 @@ module.exports = function (app, db) {
     delete result.lastChangedPassword;
     if (!result._error) {
       req.session.user = result;
-      res.cookie('loggedInUsername', result.username, {
-        secure: 'auto',
-        maxAge: 2 * 60 * 60 * 1000,
-      });
     }
-    console.log(req.session.user);
     res.json(result);
   });
 };

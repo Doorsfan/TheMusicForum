@@ -112,7 +112,8 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.post('/api/createNewThread', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn(req)) {
+      console.log(req.session.user);
+      if (req.session?.user) {
         let relevantGroup = db.prepare(
           `SELECT * FROM userGroup WHERE userGroup.name = :name`
         );
@@ -121,12 +122,13 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         });
 
         let myStatement = db.prepare(
-          `INSERT INTO thread (id, groupId, title, postedBy) VALUES (NULL, :groupId, :title, :postedBy)`
+          `INSERT INTO thread (id, groupId, title, postedBy, originalThreadPost, blocked) VALUES (NULL, :groupId, :title, :postedBy, :originalThreadPost, 0)`
         );
         let result = myStatement.run({
           groupId: groupResult[0]['id'],
           title: req.body.title,
-          postedBy: req.body.postedBy,
+          postedBy: req.session.user.username,
+          originalThreadPost: req.body.originalThreadPost,
         });
         res.status(200);
         res.json('Made a new thread');
@@ -134,6 +136,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         throw 'You need to be logged in when making threads.';
       }
     } catch (e) {
+      console.log(e);
       res.status(403);
       res.json('You need to be logged in when making threads.');
     }
@@ -141,7 +144,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
   app.post('/api/createNewGroup', (req, res) => {
     try {
-      if (!seeIfIAmLoggedIn(req)) {
+      if (seeIfIAmLoggedIn(req)) {
         let myStatement = db.prepare(
           `INSERT INTO userGroup (id, description, name) VALUES (NULL, :description , :name)`
         );
@@ -161,7 +164,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
           `SELECT * FROM users WHERE users.username = :username`
         );
         let groupOwnerResult = groupOwner.all({
-          username: req.body.groupOwner,
+          username: req.session.user.username,
         });
 
         let createMyGroupMember = db.prepare(
@@ -203,11 +206,11 @@ module.exports = function setupRESTapi(app, databaseConnection) {
           `SELECT * FROM users WHERE users.username = :username`
         );
         let sentFromId = fromUser.all({
-          username: req.body.fromUser,
+          username: req.session.user.username,
         })[0]['id'];
 
         let targetGroup = db.prepare(
-          `SELECT * FROM userGroup WHERE userGroup.name = :name'`
+          `SELECT * FROM userGroup WHERE userGroup.name = :name`
         );
         let groupId = targetGroup.all({
           name: req.body.groupName,
@@ -252,6 +255,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         res.json('That User does not exist.');
       }
     } catch (e) {
+      console.log(e);
       res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to invite other users to groups.');
@@ -262,7 +266,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
   });
 
   function seeIfIAmLoggedIn(req) {
-    return !!req.session.user;
+    return req.session.user != null;
   }
 
   app.post('/api/createNewPost/:threadName', (req, res) => {
@@ -274,12 +278,12 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `SELECT * FROM users WHERE users.username = :username`
       );
       let foundUser = relevantUser.all({
-        username: req.body.postedByUsername,
+        username: req.session.user.username,
       });
       let id = foundUser[0]['id'];
 
       let relevantThread = db.prepare(
-        `SELECT * FROM thread WHERE thread.title = :title'`
+        `SELECT * FROM thread WHERE thread.title = :title`
       );
       let threadResult = relevantThread.all({
         title: req.params['threadName'],
@@ -303,6 +307,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       res.status(200);
       res.json(allThreadsResult);
     } catch (e) {
+      console.log(e);
       res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to create new posts to threads.');
@@ -312,7 +317,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     }
   });
 
-  app.get('/api/getThreadsForGroup/:name/:askedBy', (req, res) => {
+  app.get('/api/getThreadsForGroup/:name', (req, res) => {
     try {
       if (!seeIfIAmLoggedIn(req)) {
         throw 'Have to be logged in for that.';
@@ -342,7 +347,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     }
   });
 
-  app.get('/api/getPostsForGroup/:name/:askedBy', (req, res) => {
+  app.get('/api/getPostsForGroup/:name', (req, res) => {
     try {
       if (!seeIfIAmLoggedIn(req)) {
         throw 'Have to be logged in for that.';
@@ -401,7 +406,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `SELECT * FROM users WHERE users.username = :username`
       );
       let promoteResult = personWantingToPromote.all({
-        username: req.body.personTryingToPromote,
+        username: req.session.user.username,
       })[0]['id'];
 
       let checkIfModerator = db.prepare(
@@ -430,7 +435,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       })[0]['id'];
 
       let relevantUpdate = db.prepare(
-        `UPDATE groupMember SET groupMember.moderatorLevel = 'moderator' WHERE groupMember.userId = :userId AND groupMember.belongsToGroup = :belongsToGroup`
+        `UPDATE groupMember SET moderatorLevel = 'moderator' WHERE groupMember.userId = :userId AND groupMember.belongsToGroup = :belongsToGroup`
       );
       let relevantResult = relevantUpdate.run({
         userId: userId,
@@ -457,7 +462,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `SELECT * FROM users WHERE users.username = :username`
       );
       let demoteResult = personWantingToDemote.all({
-        username: req.body.personTryingToDemote,
+        username: req.session.user.username,
       })[0]['id'];
 
       let checkIfModerator = db.prepare(
@@ -486,7 +491,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       })[0]['id'];
 
       let relevantUpdate = db.prepare(
-        `UPDATE groupMember SET groupMember.moderatorLevel = 'user' WHERE groupMember.userId = :userid AND groupMember.belongsToGroup = :belongsToGroup`
+        `UPDATE groupMember SET moderatorLevel = 'user' WHERE groupMember.userId = :userId AND groupMember.belongsToGroup = :belongsToGroup`
       );
       let relevantResult = relevantUpdate.run({
         userId: userId,
@@ -495,6 +500,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       res.status(200);
       res.json('Demoted to user');
     } catch (e) {
+      console.log(e);
       res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to demote people.');
@@ -513,7 +519,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `SELECT * FROM users WHERE users.username = :username`
       );
       let unblockResult = personWantingToUnblock.all({
-        username: req.body.personTryingToUnblock,
+        username: req.session.user.username,
       })[0]['id'];
 
       let checkIfModerator = db.prepare(
@@ -571,7 +577,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `SELECT * FROM users WHERE users.username = :username`
       );
       let blockResult = personWantingToBlock.all({
-        username: req.body.personTryingToBlock,
+        username: req.session.user.username,
       })[0]['id'];
 
       let checkIfModerator = db.prepare(
@@ -601,7 +607,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       })[0]['id'];
 
       let relevantUpdate = db.prepare(
-        `UPDATE groupMember SET groupMember.blocked = 1 WHERE groupMember.userId = :userId AND groupMember.belongsToGroup = :belongsToGroup`
+        `UPDATE groupMember SET blocked = 1 WHERE groupMember.userId = :userId AND groupMember.belongsToGroup = :belongsToGroup`
       );
       let relevantResult = relevantUpdate.run({
         userId: userId,
@@ -611,6 +617,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       res.json('Blocked user');
     } catch (e) {
       res.status(403);
+      console.log(e);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to block people.');
       } else {
@@ -619,7 +626,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     }
   });
 
-  app.get('/api/canIPostInThisGroup/:groupName/:username', (req, res) => {
+  app.get('/api/canIPostInThisGroup/:groupName', (req, res) => {
     try {
       if (!seeIfIAmLoggedIn(req)) {
         throw 'Have to be logged in for that.';
@@ -635,7 +642,7 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `SELECT * FROM users WHERE users.username = :username`
       );
       let userId = relevantUser.all({
-        username: req.params['username'],
+        username: req.session.user.username,
       })[0]['id'];
 
       let canPostRequest = db.prepare(
@@ -644,21 +651,26 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
       let allowPosting = canPostRequest.all({
         userId: userId,
-        belongsToGroup: groupId
-      })[0]['blocked'] == 1 ? false : true;
+        belongsToGroup: groupId,
+      });
+      let canPost = false;
+      if (allowPosting.length > 0) {
+        canPost = true;
+      }
       res.status(200);
-      res.json(allowPosting);
+      res.json(canPost);
     } catch (e) {
+      console.log(e);
       res.status(403);
       if (e == 'Have to be logged in for that.') {
-        res.json('Have to be logged in to block people.');
+        res.json('Have to be logged in to post in threads.');
       } else {
-        res.json(true);
+        res.json(false);
       }
     }
   });
 
-  app.get('/api/canIPostInThisThread/:title/:username', (req, res) => {
+  app.get('/api/canIPostInThisThread/:title', (req, res) => {
     try {
       if (!seeIfIAmLoggedIn(req)) {
         throw 'Have to be logged in for that.';
@@ -667,24 +679,27 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `SELECT * FROM thread WHERE thread.title = :title`
       );
       let groupId = relevantThread.all({
-        title: req.params['title']
+        title: req.params['title'],
       })[0]['groupId'];
 
       let relevantUser = db.prepare(
         `SELECT * FROM users WHERE users.username = :username`
       );
       let userId = relevantUser.all({
-        username: req.params['username']
+        username: req.session.user.username,
       })[0]['id'];
 
       let canPostRequest = db.prepare(
         `SELECT * FROM groupMember WHERE groupMember.userId = :userId AND groupMember.belongsToGroup = :belongsToGroup`
       );
 
-      let allowPosting = canPostRequest.all({
-        userId: userId,
-        belongsToGroup: groupId
-      })[0]['blocked'] == 1 ? false : true;
+      let allowPosting =
+        canPostRequest.all({
+          userId: userId,
+          belongsToGroup: groupId,
+        })[0]['blocked'] == 1
+          ? false
+          : true;
       res.status(200);
       res.json(allowPosting);
     } catch (e) {
@@ -706,13 +721,51 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         profileimage: req.body.profileimage,
         username: req.body.username,
         password: passwordEncryptor(req.body.password),
-        lastChangedPassword: Date.now()
+        lastChangedPassword: Date.now(),
       });
       res.status(200);
       res.json('Made a new user.');
     } catch (e) {
       res.status(403);
       res.json('Something went wrong');
+    }
+  });
+
+  app.delete('/api/leaveGroup/:name', (req, res) => {
+    try {
+      if (!seeIfIAmLoggedIn(req)) {
+        throw 'Have to be logged in for that.';
+      }
+
+      let relevantGroup = db.prepare(
+        `SELECT * FROM userGroup WHERE userGroup.name = :name`
+      );
+      let groupId = relevantGroup.all({
+        name: req.params['name'],
+      })[0]['id'];
+
+      let relevantUser = db.prepare(
+        `SELECT * FROM users WHERE users.username = :username`
+      );
+      let userId = relevantUser.all({
+        username: req.session.user.username,
+      })[0]['id'];
+      let removeUserFromGroup = db.prepare(
+        `DELETE FROM groupMember WHERE groupMember.belongsToGroup = :belongsToGroup AND groupMember.userId = :userId`
+      );
+      let result = removeUserFromGroup.run({
+        belongsToGroup: groupId,
+        userId: userId,
+      });
+      res.status(200);
+      res.json(result);
+    } catch (e) {
+      res.status(403);
+      if (e == 'Have to be logged in for that.') {
+        res.json('Cannot do that without being logged in.');
+      } else {
+        res.json('Something went wrong');
+      }
     }
   });
 
@@ -726,21 +779,15 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         `SELECT * FROM users WHERE users.username = :username`
       );
       let removeResult = personWantingToRemove.all({
-        username: req.body.personTryingToRemove
+        username: req.session.user.username,
       })[0]['id'];
 
       let checkIfModerator = db.prepare(
         `SELECT * FROM groupMember WHERE groupMember.userId = :userId`
       );
       let moderatorResult = checkIfModerator.all({
-        userId: removeResult
+        userId: removeResult,
       });
-      console.log(req.session.user.username);
-      console.log(req.body.personTryingToRemove);
-      console.log(
-        'Comparison',
-        req.session.user.username == req.body.personTryingToRemove
-      );
 
       if (moderatorResult.length == 0) {
         throw 'No moderator found to remove from.';
@@ -751,18 +798,25 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       }
 
       let relevantGroup = db.prepare(
-        `SELECT * FROM userGroup WHERE name = '${req.params['name']}'`
+        `SELECT * FROM userGroup WHERE userGroup.name = :name`
       );
-      let groupId = relevantGroup.all()[0]['id'];
+      let groupId = relevantGroup.all({
+        name: req.params['name'],
+      })[0]['id'];
 
       let relevantUser = db.prepare(
-        `SELECT * FROM users WHERE username = '${req.body.relevantUser}'`
+        `SELECT * FROM users WHERE users.username = :username`
       );
-      let userId = relevantUser.all()[0]['id'];
+      let userId = relevantUser.all({
+        username: req.body.relevantUser,
+      })[0]['id'];
       let removeUserFromGroup = db.prepare(
-        `DELETE FROM groupMember WHERE belongsToGroup = '${groupId}' AND userId = '${userId}'`
+        `DELETE FROM groupMember WHERE groupMember.belongsToGroup = :belongsToGroup AND groupMember.userId = :userId`
       );
-      let result = removeUserFromGroup.run();
+      let result = removeUserFromGroup.run({
+        belongsToGroup: groupId,
+        userId: userId,
+      });
       res.status(200);
       res.json(result);
     } catch (e) {
@@ -781,25 +835,35 @@ module.exports = function setupRESTapi(app, databaseConnection) {
         throw 'Have to be logged in for that.';
       }
       let relevantGroup = db.prepare(
-        `SELECT * FROM userGroup WHERE name = '${req.params['name']}'`
+        `SELECT * FROM userGroup WHERE userGroup.name = :name`
       );
-      let groupId = relevantGroup.all()[0].id;
-      console.log('GroupId: ', groupId);
+      let groupId = relevantGroup.all({
+        name: req.params['name'],
+      })[0].id;
+
       let groupMembersQuery = db.prepare(
-        `SELECT * FROM groupMember WHERE belongsToGroup = '${groupId}'`
+        `SELECT * FROM groupMember WHERE groupMember.belongsToGroup = :belongsToGroup`
       );
 
-      let groupMembers = groupMembersQuery.all().map((user) => {
-        var info = Object.assign({}, user);
+      let groupMembers = groupMembersQuery
+        .all({
+          belongsToGroup: groupId,
+        })
+        .map((user) => {
+          let relevantPerson = db.prepare(
+            `SELECT * FROM users WHERE users.id = :id`
+          );
+          let userResult = relevantPerson.all({
+            id: user.userId,
+          });
+          delete userResult[0].password;
+          delete userResult[0].lastChangedPassword;
+          userResult[0].belongsToGroup = req.params.name;
+          userResult[0].moderatorLevel = user.moderatorLevel;
+          userResult[0].blocked = user.blocked;
+          return userResult[0];
+        });
 
-        let groupMemberName = db.prepare(
-          `SELECT username FROM users WHERE id = '${info.userId}'`
-        );
-        info.relevantUsername = groupMemberName.all()[0]['username'];
-        info.belongsToGroup = req.params['name'];
-        delete info.userId;
-        return info;
-      });
       res.status(200);
       res.json(groupMembers);
     } catch (e) {
@@ -813,21 +877,26 @@ module.exports = function setupRESTapi(app, databaseConnection) {
     }
   });
 
-  app.get('/api/getGroupsIAmPartOf/:username', (req, res) => {
+  app.get('/api/getGroupsIAmPartOf', (req, res) => {
     let groupsIAmPartOf = [];
     try {
       if (!seeIfIAmLoggedIn(req)) {
         throw 'Have to be logged in for that.';
       }
       let relevantUser = db.prepare(
-        `SELECT * FROM users WHERE username = '${req.params['username']}'`
+        `SELECT * FROM users WHERE users.username = :username`
       );
-      let foundUserId = relevantUser.all()[0]['id'];
+      let foundUserId = relevantUser.all({
+        username: req.session.user.username,
+      })[0]['id'];
 
       let relevantGroups = db.prepare(
-        `SELECT * FROM groupMember WHERE userId = '${foundUserId}'`
+        `SELECT * FROM groupMember WHERE groupMember.userId = :userId`
       );
-      let allGroups = relevantGroups.all();
+
+      let allGroups = relevantGroups.all({
+        userId: req.session.user.id,
+      });
       let groupIDs = [];
       for (let i = 0; i < allGroups.length; i++) {
         groupIDs.push(allGroups[i]['belongsToGroup']);
@@ -835,20 +904,33 @@ module.exports = function setupRESTapi(app, databaseConnection) {
 
       for (let e = 0; e < groupIDs.length; e++) {
         let groupIAmOfResult = db.prepare(
-          `SELECT * FROM userGroup WHERE id = '${groupIDs[e]}'`
+          `SELECT * FROM userGroup WHERE userGroup.id = :id`
         );
-        let groupIAmOfQueriedResult = groupIAmOfResult.all();
+        let groupIAmOfQueriedResult = groupIAmOfResult.all({
+          id: groupIDs[e],
+        });
         groupsIAmPartOf.push(groupIAmOfQueriedResult[0]['name']);
       }
       res.status(200);
       res.json(groupsIAmPartOf);
     } catch (e) {
+      console.log(e);
       res.status(403);
       if (e == 'Have to be logged in for that.') {
         res.json('Have to be logged in to see what groups you are part of.');
       } else {
         res.json('Something went wrong.');
       }
+    }
+  });
+
+  app.get('/api/loggedInUsersUsername', (req, res) => {
+    if (req.session.user) {
+      res.status(200);
+      res.json(req.session.user.username);
+    } else {
+      res.status(403);
+      res.json('Something went wrong.');
     }
   });
 
@@ -859,19 +941,26 @@ module.exports = function setupRESTapi(app, databaseConnection) {
       }
 
       let relevantGroup = db.prepare(
-        `SELECT * FROM userGroup WHERE name = '${req.body.name}'`
+        `SELECT * FROM userGroup WHERE userGroup.name = :name`
       );
-      let relevantGroupResult = relevantGroup.all();
+      let relevantGroupResult = relevantGroup.all({
+        name: req.body.name,
+      });
 
       let groupJoiner = db.prepare(
-        `SELECT * FROM users WHERE username = '${req.body.groupJoiner}'`
+        `SELECT * FROM users WHERE users.username = :username`
       );
-      let groupJoinerResult = groupJoiner.all();
+      let groupJoinerResult = groupJoiner.all({
+        username: req.session.user.username,
+      });
 
       let myStatement = db.prepare(
-        `INSERT INTO groupMember (userId, belongsToGroup, moderatorLevel) VALUES ('${groupJoinerResult[0].id}','${relevantGroupResult[0].id}','user')`
+        `INSERT INTO groupMember (userId, belongsToGroup, moderatorLevel) VALUES (:userId, :belongsToGroup,'user')`
       );
-      let result = myStatement.run();
+      let result = myStatement.run({
+        userId: req.session.user.id,
+        belongsToGroup: relevantGroupResult[0].id,
+      });
       res.status(200);
       res.json('Successfully joined a group.');
     } catch (e) {
